@@ -1,0 +1,143 @@
+* release 0.4.6
+	- added rewind to automatic saves
+	- fixed passwords and protection codes input
+
+* release 0.4.5
+	- added low-pass filtering for in-game music
+	- added support for 3DO background music (tunes/*.Cpc)
+	- added protection screen for DOS SSI version
+	- fixed ASC and CARTE cutscenes enablement
+	- fixed loudness of sound effects and in-game music
+
+* release 0.4.4
+	- added auto-save
+	- fixed graphical glitches with Macintosh data files
+
+* release 0.4.3
+	- added title and logo screens for Macintosh
+	- fixed cutscene offsets with Macintosh data files
+
+* release 0.4.2
+	- added graphic borders (16:9 displays)
+	- added detection for Macintosh AppleDouble
+	- added language selection in title screen
+	- added story texts for Macintosh
+
+* release 0.4.1
+	- added support for Macintosh sounds playback
+	- improved graphics scalers performance
+	- fixed palette glitches with .BNQ DOS data files
+
+* release 0.4.0
+	- added initial support for Macintosh data files (512x448 resolution)
+	- added configuration file entries for disabled cutscenes
+	- fixed screen shaking offset (level 2)
+
+* release 0.3.7
+	- added 'caillou-f.set' cutscene
+	- added detection for 'fbdemofr.zip' DOS demo data files
+	- fixed cutscene text offsets with Japanese language
+
+* release 0.3.6
+	- added cutscene music looping
+	- added 'DEMO' to title menu
+	- fixed potential crash with the 'walk through walls' glitch
+
+* release 0.3.5
+	- added Japanese in-game texts
+	- added support for localized .TBN (PC-CD)
+
+* release 0.3.4
+	- added screenshot for SDL2
+	- added support for external graphics scalers (xbrz, scale2x)
+	- fixed keypress detection for fullscreen/windowed
+
+* release 0.3.3
+	- added configuration for disabling .SEQ playback
+	- fixed some Amiga palette glitches
+	- fixed protection screen for Amiga
+
+* release 0.3.2
+	- added support for DOS demo*.bin files
+	- added detection for DOS SSI version
+	- added compilation with SDL2
+
+* release 0.3.1
+	- added workarounds for cutscene glitches present in the game (espions, voyage)
+	- fixed DOS credits sequence
+	- fixed Amiga cutscene captions display
+	- fixed Amiga 24px sprites
+
+* release 0.3.0
+	- added configuration file
+	- added optional playback for disabled cutscenes (asc, metro, serrure)
+	- added support for DOS demo data file (DEMO_UK.ABA)
+	- set frame rate to 30Hz
+
+* release 0.2.2
+	- added support for level background music
+	- added Italian texts
+	- fixed PC-CD SEQ cutscenes numbering
+	- fixed several issues with Amiga data files
+
+* release 0.2.1 (2011/03/15)
+	- added music playback to PC-CD SEQ cutscenes
+	- fixed some palette and sprite issues with Amiga data
+
+* release 0.2.0 (2011/03/11)
+	- added support for PC-CD SEQ cutscenes
+	- added support for Amiga data files (experimental)
+	- fixed minor sound glitches
+
+* release 0.1.9 (2007/03/16)
+	- fixed minor glitches in cutscenes
+	- fixed several Conrad moves
+	- fixed fast mode
+	- made game version autodetection defaulting to English
+	- added support for SegaCD speech files
+
+* release 0.1.8 (2005/08/31)
+	- fixed crash in MOD player
+	- fixed minor glitch with in-game save switches
+
+* release 0.1.7 (2005/08/24)
+	- improved in-game menu
+	- added autodetection for language of the game
+	- added support for Amiga music files
+	- added support for the protection screen (disabled by default)
+
+* release 0.1.6 (2005/06/05)
+	- added in-game menu
+	- fixed remaining graphical glitches
+
+* release 0.1.5 (2005/04/05)
+	- added spanish and german versions support
+	- added input keys recording
+	- reduced memory usage
+
+* release 0.1.4 (2005/04/02)
+	- added screen shaking (level 2)
+	- added support for Amiga music (experimental)
+	- fixed screen refresh after teleportation
+	- fixed bug in savestate restore
+
+* release 0.1.3 (2005/02/15)
+	- added dirty blocks rendering
+	- added save/load states
+	- fixed issues with level 2 cutscenes (subway maps, mission screens)
+	- fixed glitch in continue/abort screen
+
+* release 0.1.2 (2005/02/07)
+	- added sound effects playback
+	- added support for polygonal cutscenes
+	- added support for final credits sequence
+	- fixed instructions screen display in English version
+
+* release 0.1.1 (2005/01/29)
+	- added missing opcodes, game should now be completable
+	- added scale2x and scale3x filters
+	- enabled level switching
+	- fixed several engine bugs
+
+* release 0.1.0 (2005/01/23)
+	- first public release
