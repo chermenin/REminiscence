@@ -373,6 +373,7 @@ void Menu::handleTitleScreen() {
 	} languages[] = {
 		{ LANG_EN, _flagEn16x12 },
 		{ LANG_FR, _flagFr16x12 },
+		{ LANG_RU, _flagRu16x12 },
 		{ LANG_DE, _flagDe16x12 },
 		{ LANG_SP, _flagSp16x12 },
 		{ LANG_IT, _flagIt16x12 },

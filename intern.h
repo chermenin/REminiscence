@@ -99,6 +99,7 @@ enum Language {
 	LANG_SP,
 	LANG_IT,
 	LANG_JP,
+	LANG_RU,
 };
 
 enum ResourceType {

@@ -352,6 +352,8 @@ static const char *getCineName(Language lang, ResourceType type) {
 			return "FR";
 		}
 		return "FR_";
+	case LANG_RU:
+		return "RUS";
 	case LANG_DE:
 		return "GER";
 	case LANG_SP:
@@ -472,6 +474,9 @@ void Resource::load_TEXT() {
 	case LANG_FR:
 		_stringsTable = LocaleData::_stringsTableFR;
 		break;
+	case LANG_RU:
+		_stringsTable = LocaleData::_stringsTableRU;
+		break;
 	case LANG_EN:
 		_stringsTable = LocaleData::_stringsTableEN;
 		break;
@@ -493,6 +498,9 @@ void Resource::load_TEXT() {
 	switch (_lang) {
 	case LANG_FR:
 		_textsTable = LocaleData::_textsTableFR;
+		break;
+	case LANG_RU:
+		_textsTable = LocaleData::_textsTableRU;
 		break;
 	case LANG_EN:
 		_textsTable = LocaleData::_textsTableEN;
@@ -522,6 +530,7 @@ static const char *getTextBin(Language lang, ResourceType type) {
 	// .TBN is used as fallback if open fails
 	switch (lang) {
 	case LANG_FR:
+	case LANG_RU:
 		return "TBF";
 	case LANG_DE:
 		return "TBG";

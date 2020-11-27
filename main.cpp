@@ -63,6 +63,7 @@ static Language detectLanguage(FileSystem *fs) {
 		// PC
 		{ "ENGCINE.TXT", LANG_EN },
 		{ "FR_CINE.TXT", LANG_FR },
+		{ "RUSCINE.TXT", LANG_RU },
 		{ "GERCINE.TXT", LANG_DE },
 		{ "SPACINE.TXT", LANG_SP },
 		{ "ITACINE.TXT", LANG_IT },
@@ -86,7 +87,7 @@ const char *g_caption = "REminiscence";
 static void initOptions() {
 	// defaults
 	g_options.bypass_protection = true;
-	g_options.enable_password_menu = false;
+	g_options.enable_password_menu = true;
 	g_options.enable_language_selection = false;
 	g_options.fade_out_palette = true;
 	g_options.use_text_cutscenes = false;
@@ -188,7 +189,7 @@ int main(int argc, char *argv[]) {
 	const char *dataPath = "DATA";
 	const char *savePath = "SAVE";
 	int levelNum = 0;
-	bool fullscreen = false;
+	bool fullscreen = true;
 	bool autoSave = false;
 	WidescreenMode widescreen = kWidescreenNone;
 	ScalerParameters scalerParameters = ScalerParameters::defaults();
@@ -205,7 +206,7 @@ int main(int argc, char *argv[]) {
 			{ "datapath",   required_argument, 0, 1 },
 			{ "savepath",   required_argument, 0, 2 },
 			{ "levelnum",   required_argument, 0, 3 },
-			{ "fullscreen", no_argument,       0, 4 },
+			{ "window",	    no_argument,       0, 4 },
 			{ "scaler",     required_argument, 0, 5 },
 			{ "language",   required_argument, 0, 6 },
 			{ "widescreen", required_argument, 0, 7 },
@@ -228,7 +229,7 @@ int main(int argc, char *argv[]) {
 			levelNum = atoi(optarg);
 			break;
 		case 4:
-			fullscreen = true;
+			fullscreen = false;
 			break;
 		case 5:
 			parseScaler(optarg, &scalerParameters);
@@ -244,6 +245,7 @@ int main(int argc, char *argv[]) {
 					{ LANG_SP, "SP" },
 					{ LANG_IT, "IT" },
 					{ LANG_JP, "JP" },
+					{ LANG_RU, "RU" },
 					{ -1, 0 }
 				};
 				for (int i = 0; languages[i].str; ++i) {
@@ -266,7 +268,7 @@ int main(int argc, char *argv[]) {
 		}
 	}
 	initOptions();
-	g_debugMask = DBG_INFO; // DBG_CUT | DBG_VIDEO | DBG_RES | DBG_MENU | DBG_PGE | DBG_GAME | DBG_UNPACK | DBG_COL | DBG_MOD | DBG_SFX | DBG_FILE;
+	g_debugMask = DBG_INFO; // | DBG_MOD | DBG_SFX | DBG_SND | DBG_FILE | DBG_CUT | DBG_VIDEO | DBG_RES | DBG_MENU | DBG_PGE | DBG_GAME | DBG_UNPACK | DBG_COL
 	FileSystem fs(dataPath);
 	const int version = detectVersion(&fs);
 	if (version == -1) {

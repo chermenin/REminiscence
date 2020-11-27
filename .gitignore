@@ -1,5 +1,9 @@
+# IDE
+.vscode/
+
 # Folders
 DATA/
+SAVE/
 tremor/
 
 # Prerequisites

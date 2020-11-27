@@ -56,6 +56,7 @@ struct Menu {
 
 	static const uint8_t _flagEn16x12[];
 	static const uint8_t _flagFr16x12[];
+	static const uint8_t _flagRu16x12[];
 	static const uint8_t _flagDe16x12[];
 	static const uint8_t _flagIt16x12[];
 	static const uint8_t _flagJp16x12[];

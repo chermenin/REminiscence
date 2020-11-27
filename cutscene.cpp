@@ -1025,7 +1025,7 @@ bool Cutscene::load(uint16_t cutName) {
 			name = "SERRURE";
 		}
 		_res->load(name, Resource::OT_CMP);
-		if (_id == 0x39 && _res->_lang != LANG_FR) {
+		if (_id == 0x39 && _res->_lang != LANG_FR && _res->_lang != LANG_RU) {
 			//
 			// 'espions' - '... the power which we need' caption is missing in Amiga English.
 			// fixed in DOS version, opcodes order is wrong

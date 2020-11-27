@@ -587,7 +587,10 @@ void Game::inp_handleSpecialKeys() {
 		_stub->_pi.load = false;
 	}
 	if (_stub->_pi.save) {
-		saveGameState(_stateSlot);
+		_validSaveState = saveGameState(_stateSlot);
+		if (_validSaveState and g_options.play_gamesaved_sound) {
+			_mix.play(Resource::_gameSavedSoundData, Resource::_gameSavedSoundLen, 8000, Mixer::MAX_VOLUME);
+		}
 		_stub->_pi.save = false;
 	}
 	if (_stub->_pi.stateSlot != 0) {
