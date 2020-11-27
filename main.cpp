@@ -84,7 +84,7 @@ static Language detectLanguage(FileSystem *fs) {
 Options g_options;
 const char *g_caption = "REminiscence";
 
-static void initOptions() {
+static void initOptions(char *config_file) {
 	// defaults
 	g_options.bypass_protection = true;
 	g_options.enable_password_menu = true;
@@ -122,7 +122,8 @@ static void initOptions() {
 		{ "play_gamesaved_sound", &g_options.play_gamesaved_sound },
 		{ 0, 0 }
 	};
-	static const char *filename = "rs.cfg";
+	char filename[16];
+	snprintf(filename, sizeof(filename), "%s.cfg", config_file);
 	FILE *fp = fopen(filename, "rb");
 	if (fp) {
 		char buf[256];
@@ -267,7 +268,7 @@ int main(int argc, char *argv[]) {
 			return 0;
 		}
 	}
-	initOptions();
+	initOptions(argv[0]);
 	g_debugMask = DBG_INFO; // | DBG_MOD | DBG_SFX | DBG_SND | DBG_FILE | DBG_CUT | DBG_VIDEO | DBG_RES | DBG_MENU | DBG_PGE | DBG_GAME | DBG_UNPACK | DBG_COL
 	FileSystem fs(dataPath);
 	const int version = detectVersion(&fs);
