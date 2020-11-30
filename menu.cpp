@@ -255,7 +255,7 @@ bool Menu::handleLevelScreen() {
 	int currentLevel = _level;
 	do {
 		for (int i = 0; i < 7; ++i) {
-			drawString(_levelNames[i], 7 + i * 2, 4, (currentLevel == i) ? 2 : 3);
+			drawString(getLevelName(i), 7 + i * 2, 4, (currentLevel == i) ? 2 : 3);
 		}
 		_vid->markBlockAsDirty(4 * Video::CHAR_W, 7 * Video::CHAR_H, 192, 7 * Video::CHAR_H, _vid->_layerScale);
 
@@ -498,6 +498,14 @@ void Menu::handleTitleScreen() {
 		_vid->updateScreen();
 		_stub->sleep(EVENTS_DELAY);
 		_stub->processEvents();
+	}
+}
+
+const char *Menu::getLevelName(int level) const {
+	if (_res->_lang == LANG_RU) {
+		return _levelNamesRu[level];
+	} else {
+		return _levelNames[level];
 	}
 }
 

@@ -2,8 +2,10 @@
 .vscode/
 
 # Folders
+.DS_Store/
 DATA/
 SAVE/
+ORIG/
 tremor/
 
 # Prerequisites

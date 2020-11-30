@@ -225,7 +225,7 @@ void Game::displayTitleScreenAmiga() {
 			static const uint8_t selectedColor = 0xE4;
 			static const uint8_t defaultColor = 0xE8;
 			for (int i = 0; i < 7; ++i) {
-				const char *str = Menu::_levelNames[i];
+				const char *str = _menu.getLevelName(i);
 				const uint8_t color = (_currentLevel == i) ? selectedColor : defaultColor;
 				const int x = 24;
 				const int y = 24 + i * 16;
@@ -321,7 +321,7 @@ void Game::displayTitleScreenMac(int num) {
 			static const uint8_t selectedColor = 0xE4;
 			static const uint8_t defaultColor = 0xE8;
 			for (int i = 0; i < 7; ++i) {
-				const char *str = Menu::_levelNames[i];
+				const char *str = _menu.getLevelName(i);
 				_vid.drawString(str, 24, 24 + i * 16, (_currentLevel == i) ? selectedColor : defaultColor);
 			}
 			if (_stub->_pi.dirMask & PlayerInput::DIR_UP) {
@@ -1814,6 +1814,9 @@ void Game::playSound(uint8_t num, uint8_t softVol) {
 	} else if (num >= 68 && num <= 75) {
 		// in-game music
 		_mix.playMusic(num);
+	} else if (num == 76) {
+		// metro train sound
+		playSound(0, softVol);
 	} else if (num == 77) {
 		// triggered when Conrad reaches a platform
 	} else {

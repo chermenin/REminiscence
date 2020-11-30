@@ -4148,6 +4148,16 @@ const char *Menu::_levelNames[] = {
 	"Planet Morphs / Inner Core"
 };
 
+const char *Menu::_levelNamesRu[] = {
+	"titaH / dvuHgli",
+	"titaH / Hxw-pEtEPbuPg",
+	"titaH / ba{Hq CmEPti",
+	"zEmlq / poBEPXHoCtx",
+	"zEmlq / klub PARADISE",
+	"pl. MoPfoB / poBEPXHoCtx",
+	"pl. MoPfoB / qdPo"
+};
+
 const char *Menu::_passwordsDOS[] = {
 	"JAGUAR", "COMBEL", "ANTIC",  "NOLAN",  "ARTHUR", "SHIRYU", "RENDER", "BELUGA", // easy
 	"BANTHA", "SHIVA",  "KASYYK", "SARLAC", "MAENOC", "SULUST", "NEPTUN", "BELUGA", // normal
