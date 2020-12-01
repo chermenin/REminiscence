@@ -17,8 +17,7 @@ translate_map = {
     'О': 'o', 'П': 'p', 'Р': 'P', 'С': 'C', 'Т': 't',
     'У': 'u', 'Ф': 'f', 'Х': 'X', 'Ц': 'c', 'Ч': 'h',
     'Ш': '{', 'Щ': '}', 'Ъ': '\'', 'Ы': 'y', 'Ь': 'x',
-    'Э': 'e', 'Ю': 'w', 'Я': 'q',
-    '|': '\x0A', '#': '\x0B'
+    'Э': 'e', 'Ю': 'w', 'Я': 'q'
 }
 
 
@@ -31,8 +30,8 @@ def hex2chr(hex: str) -> chr:
     return chr(int(hex, 16))
 
 
-def int2be(value: int) -> bytes:
-    return value.to_bytes(2, byteorder='little')
+def int2hex(value: int, byteorder: str) -> bytes:
+    return value.to_bytes(2, byteorder)
 
 
 def translate_line(line: str) -> bytes:
@@ -60,22 +59,41 @@ if __name__ == "__main__":
             translated = translate_line(line)
             lines.append(translated)
             clean_offsets.append(clean_offsets[-1] + len(translated))
+
+    output_file = sys.argv[2]
+    is_tbn = output_file.upper().endswith('.TBN')
     
-    offsets_shift = (len(clean_offsets) - 1) * 2
-    offsets = [int2be(offset + offsets_shift) for offset in clean_offsets]
+    offsets_shift = (len(clean_offsets) - 1) * 2 if is_tbn else 0
+    offsets = [int2hex(
+            offset + offsets_shift,
+            'little' if is_tbn else 'big'
+        ) for offset in clean_offsets]
 
-    with open(sys.argv[2], 'wb') as output:
-        for offset in offsets[:-1]:
-            output.write(offset)
-        for line in lines:
-            output.write(line)
+    if is_tbn:
+        with open(output_file, 'wb') as output:
+            for offset in offsets[:-1]:
+                output.write(offset)
+            for line in lines:
+                output.write(line.replace(b'|', b'\x0A').replace(b'#', b'\x0B'))
 
-    byte_list = []
-    with open(sys.argv[2], "rb") as file:
-        byte = file.read(1)
-        while byte:
-            byte_list.append(byte.hex().upper())
+        byte_list = []
+        with open(sys.argv[2], "rb") as file:
             byte = file.read(1)
+            while byte:
+                byte_list.append(byte.hex().upper())
+                byte = file.read(1)
 
-    for row in list(chunks([f"0x{b}" for b in byte_list], 16)):
-        print(", ".join(row), end=",\n")
+        for row in list(chunks([f"0x{b}" for b in byte_list], 16)):
+            print(", ".join(row), end=",\n")
+
+    elif output_file.upper().endswith('.BIN'):
+        with open(output_file, 'wb') as offset_output:
+            for offset in offsets[:-1]:
+                offset_output.write(offset)
+        
+        with open(output_file.replace('.BIN', '.TXT'), 'wb') as output:
+            for line in lines:
+                output.write(line.replace(b'\x00', b'\x0A'))
+    
+    else:
+        print('Unknown output format')
