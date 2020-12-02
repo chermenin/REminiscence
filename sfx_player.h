@@ -49,7 +49,6 @@ struct SfxPlayer {
 	static const uint8_t _musicData73[];
 	static const uint8_t _musicData74[];
 	static const uint8_t _musicData75[];
-	static const uint8_t _musicData76[];
 	static const uint8_t _musicDataSample1[];
 	static const uint8_t _musicDataSample2[]; // tick
 	static const uint8_t _musicDataSample3[]; // bell
@@ -64,7 +63,6 @@ struct SfxPlayer {
 	static const Module _module73;
 	static const Module _module74;
 	static const Module _module75;
-	static const Module _module76;
 	static const uint16_t _periodTable[];
 
 	const Module *_mod;
