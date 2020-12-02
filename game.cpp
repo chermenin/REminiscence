@@ -13,6 +13,7 @@
 #include "systemstub.h"
 #include "unpack.h"
 #include "util.h"
+#include "mixer.h"
 
 Game::Game(SystemStub *stub, FileSystem *fs, const char *savePath, int level, ResourceType ver, Language lang, WidescreenMode widescreenMode, bool autoSave)
 	: _cut(&_res, stub, &_vid), _menu(&_res, stub, &_vid),
@@ -481,6 +482,7 @@ void Game::playCutscene(int id) {
 	if (id != -1) {
 		_cut._id = id;
 	}
+	debug(DBG_INFO, "Cut scene %d", _cut._id);
 	if (_cut._id != 0xFFFF) {
 		if (_stub->hasWidescreen()) {
 			_stub->enableWidescreen(false);
@@ -520,13 +522,13 @@ void Game::playCutscene(int id) {
 				return;
 			}
 			if (SeqPlayer::_namesTable[_cut._id]) {
-			        char name[16];
-			        snprintf(name, sizeof(name), "%s.SEQ", SeqPlayer::_namesTable[_cut._id]);
+				char name[16];
+				snprintf(name, sizeof(name), "%s.SEQ", SeqPlayer::_namesTable[_cut._id]);
 				char *p = strchr(name, '0');
 				if (p) {
 					*p += num;
 				}
-			        if (playCutsceneSeq(name)) {
+				if (playCutsceneSeq(name)) {
 					if (_cut._id == 0x3D) {
 						playCutsceneSeq("CREDITS.SEQ");
 						_cut._interrupted = false;
@@ -557,7 +559,10 @@ void Game::playCutscene(int id) {
 				_stub->setPaletteEntry(0xC0 + i, &palette[i]);
 			}
 		}
-		if (id == 0x3D) {
+		if (id == 0x3D && _res._type != kResourceTypeMac) {
+			if (_mix._backgroundMusicType == Mixer::MT_OGG) {
+				_mix.playMusic(1009);
+			}
 			_cut.playCredits();
 		}
 		_mix.stopMusic();
@@ -1816,7 +1821,7 @@ void Game::playSound(uint8_t num, uint8_t softVol) {
 		_mix.playMusic(num);
 	} else if (num == 76) {
 		// metro train sound
-		playSound(0, softVol);
+		playSound(8, softVol);
 	} else if (num == 77) {
 		// triggered when Conrad reaches a platform
 	} else {
