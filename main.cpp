@@ -16,10 +16,11 @@
 #include "util.h"
 
 static const char *USAGE =
-	"REminiscence - Flashback Interpreter\n"
+	"Flashback: The Quest for Identity\n"
 	"Usage: %s [OPTIONS]...\n"
 	"  --datapath=PATH   Path to data files (default 'DATA')\n"
 	"  --savepath=PATH   Path to save files (default 'SAVE')\n"
+	"  --tunepath=PATH   Path to sound and music files (default 'TUNES')\n"
 	"  --levelnum=NUM    Start to level, bypass introduction\n"
 	"  --fullscreen      Fullscreen display\n"
 	"  --widescreen=MODE 16:9 display (adjacent,mirror,blur,none)\n"
@@ -82,9 +83,9 @@ static Language detectLanguage(FileSystem *fs) {
 }
 
 Options g_options;
-const char *g_caption = "REminiscence";
+const char *g_caption = "Flashback";
 
-static void initOptions(char *config_file) {
+static void initOptions() {
 	// defaults
 	g_options.bypass_protection = true;
 	g_options.enable_password_menu = true;
@@ -93,12 +94,12 @@ static void initOptions(char *config_file) {
 	g_options.use_text_cutscenes = false;
 	g_options.use_seq_cutscenes = true;
 	g_options.use_words_protection = false;
-	g_options.use_white_tshirt = false;
-	g_options.play_asc_cutscene = false;
-	g_options.play_caillou_cutscene = false;
-	g_options.play_metro_cutscene = false;
-	g_options.play_serrure_cutscene = false;
-	g_options.play_carte_cutscene = false;
+	g_options.use_white_tshirt = true; 
+	g_options.play_asc_cutscene = true;
+	g_options.play_caillou_cutscene = true;
+	g_options.play_metro_cutscene = true;
+	g_options.play_serrure_cutscene = true;
+	g_options.play_carte_cutscene = true;
 	g_options.play_gamesaved_sound = false;
 	// read configuration file
 	struct {
@@ -122,9 +123,7 @@ static void initOptions(char *config_file) {
 		{ "play_gamesaved_sound", &g_options.play_gamesaved_sound },
 		{ 0, 0 }
 	};
-	char filename[16];
-	snprintf(filename, sizeof(filename), "%s.cfg", config_file);
-	FILE *fp = fopen(filename, "rb");
+	FILE *fp = fopen("fb.cfg", "rb");
 	if (fp) {
 		char buf[256];
 		while (fgets(buf, sizeof(buf), fp)) {
@@ -189,6 +188,7 @@ static WidescreenMode parseWidescreen(const char *mode) {
 int main(int argc, char *argv[]) {
 	const char *dataPath = "DATA";
 	const char *savePath = "SAVE";
+	const char *tunePath = "TUNES";
 	int levelNum = 0;
 	bool fullscreen = true;
 	bool autoSave = false;
@@ -206,12 +206,13 @@ int main(int argc, char *argv[]) {
 		static struct option options[] = {
 			{ "datapath",   required_argument, 0, 1 },
 			{ "savepath",   required_argument, 0, 2 },
-			{ "levelnum",   required_argument, 0, 3 },
-			{ "window",	    no_argument,       0, 4 },
-			{ "scaler",     required_argument, 0, 5 },
-			{ "language",   required_argument, 0, 6 },
-			{ "widescreen", required_argument, 0, 7 },
-			{ "autosave",   no_argument,       0, 8 },
+			{ "tunepath",   required_argument, 0, 3 },
+			{ "levelnum",   required_argument, 0, 4 },
+			{ "window",	    no_argument,       0, 5 },
+			{ "scaler",     required_argument, 0, 6 },
+			{ "language",   required_argument, 0, 7 },
+			{ "widescreen", required_argument, 0, 8 },
+			{ "autosave",   no_argument,       0, 9 },
 			{ 0, 0, 0, 0 }
 		};
 		int index;
@@ -227,15 +228,18 @@ int main(int argc, char *argv[]) {
 			savePath = strdup(optarg);
 			break;
 		case 3:
-			levelNum = atoi(optarg);
+			tunePath = strdup(optarg);
 			break;
 		case 4:
-			fullscreen = false;
+			levelNum = atoi(optarg);
 			break;
 		case 5:
+			fullscreen = false;
+			break;
+		case 6:
 			parseScaler(optarg, &scalerParameters);
 			break;
-		case 6: {
+		case 7: {
 				static const struct {
 					int lang;
 					const char *str;
@@ -257,10 +261,10 @@ int main(int argc, char *argv[]) {
 				}
 			}
 			break;
-		case 7:
+		case 8:
 			widescreen = parseWidescreen(optarg);
 			break;
-		case 8:
+		case 9:
 			autoSave = true;
 			break;
 		default:
@@ -268,9 +272,10 @@ int main(int argc, char *argv[]) {
 			return 0;
 		}
 	}
-	initOptions(argv[0]);
+	initOptions();
 	g_debugMask = DBG_INFO; // | DBG_MOD | DBG_SFX | DBG_SND | DBG_FILE | DBG_CUT | DBG_VIDEO | DBG_RES | DBG_MENU | DBG_PGE | DBG_GAME | DBG_UNPACK | DBG_COL
 	FileSystem fs(dataPath);
+	FileSystem tune_fs(tunePath);
 	const int version = detectVersion(&fs);
 	if (version == -1) {
 		error("Unable to find data files, check that all required files are present");
@@ -278,7 +283,7 @@ int main(int argc, char *argv[]) {
 	}
 	const Language language = (forcedLanguage == -1) ? detectLanguage(&fs) : (Language)forcedLanguage;
 	SystemStub *stub = SystemStub_SDL_create();
-	Game *g = new Game(stub, &fs, savePath, levelNum, (ResourceType)version, language, widescreen, autoSave);
+	Game *g = new Game(stub, &fs, &tune_fs, savePath, levelNum, (ResourceType)version, language, widescreen, autoSave);
 	stub->init(g_caption, g->_vid._w, g->_vid._h, fullscreen, widescreen, &scalerParameters);
 	g->run();
 	delete g;

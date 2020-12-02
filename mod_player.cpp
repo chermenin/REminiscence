@@ -558,7 +558,7 @@ void ModPlayer_impl::handleTick() {
 			p += 4;
 		}
 		++_currentPatternPos;
-		if (_currentPatternPos == 64) {
+		if (_currentPatternPos == 64 || _repeatIntro) {
 			++_currentPatternOrder;
 			_currentPatternPos = 0;
 			debug(DBG_MOD, "ModPlayer::handleTick() _currentPatternOrder = %d/%d", _currentPatternOrder, _modInfo.numPatterns);

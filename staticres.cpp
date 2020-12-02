@@ -4658,32 +4658,32 @@ const uint16_t ModPlayer::_periodTable[] = {
 };
 
 const char *ModPlayer::_modulesFiles[][2] = {
-	{ "intro",       "mod.flashback-introb"    }, // introl3
-	{ "options",     "mod.flashback-options2"  }, // option3
-	{ "journal",     "mod.flashback-options1"  }, // journal3
-	{ "ceinture",    "mod.flashback-ceinturea" }, // chute3
-	{ "desinteg",    "mod.flashback-desintegr" }, // desinte3
-	{ "reunion",     "mod.flashback-reunion"   }, // capture3
-	{ "voyage",      "mod.flashback-voyage"    }, // voyage3
-	{ "level4",      "mod.flashback-teleporta" }, // telepor3
-	{ "planetexplo", "mod.flashback-teleport2" }, // planexp3
-	{ "fin",         "mod.flashback-fin"       }, // end31
-	{ "ascenseur",   "mod.flashback-ascenseur" }, // lift3
-	{ "logo",        "mod.flashback-logo"      }, // present3
-	{ "game_over",   "mod.flashback-game_over" }, // gameove3
-	{ "holocube",    "mod.flashback-holocube"  }, // holo3
-	{ "memoire",     "mod.flashback-memoire"   }, // memory3
-	{ "chute",       "mod.flashback-chute"     }, // chutevi3
-	{ "debut",       "mod.flashback-jungle"    }, // reveil3
-	{ "missions",    "mod.flashback-missionca" }, // misvali3
-	{ "taxi",        "mod.flashback-taxi"      }, // taxi3
-	{ "donneobj",    "mod.flashback-donneobjt" }, // donner3
-	{ "missions2",   "mod.flashback-fin2"      }, // mission3
-	{ "donneobj",    "mod.flashback-donneobjt" }, // objet3
-	{ "recharge",    "mod.flashback-recharge"  }, // recharg3
-	{ "generate",    "mod.flashback-generate"  }, // generat3
-	{ "pont",        "mod.flashback-pont"      }, // pont3
-	{ "rechagen",    "mod.flashback-rechagen"  }, // rechage3
+	{ "intro",       "introb.mod"    }, // introl3
+	{ "options",     "options2.mod"  }, // option3
+	{ "journal",     "options1.mod"  }, // journal3
+	{ "ceinture",    "ceinturea.mod" }, // chute3
+	{ "desinteg",    "desintegr.mod" }, // desinte3
+	{ "reunion",     "reunion.mod"   }, // capture3
+	{ "voyage",      "voyage.mod"    }, // voyage3
+	{ "level4",      "teleporta.mod" }, // telepor3
+	{ "planetexplo", "teleport2.mod" }, // planexp3
+	{ "fin",         "fin.mod"       }, // end31
+	{ "ascenseur",   "ascenseur.mod" }, // lift3
+	{ "logo",        "logo.mod"      }, // present3
+	{ "gameover",    "gameover.mod"  }, // gameove3
+	{ "holocube",    "holocube.mod"  }, // holo3
+	{ "memoire",     "memoire.mod"   }, // memory3
+	{ "chute",       "chute.mod"     }, // chutevi3
+	{ "debut",       "jungle.mod"    }, // reveil3
+	{ "missions",    "missionca.mod" }, // misvali3
+	{ "taxi",        "taxi.mod"      }, // taxi3
+	{ "donneobj",    "donneobjt.mod" }, // donner3
+	{ "missions2",   "fin2.mod"      }, // mission3
+	{ "donneobj",    "donneobjt.mod" }, // objet3
+	{ "recharge",    "recharge.mod"  }, // recharg3
+	{ "generate",    "generate.mod"  }, // generat3
+	{ "pont",        "pont.mod"      }, // pont3
+	{ "rechagen",    "rechagen.mod"  }, // rechage3
 };
 
 const int ModPlayer::_modulesFilesCount = ARRAYSIZE(_modulesFiles);

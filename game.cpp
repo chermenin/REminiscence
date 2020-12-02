@@ -15,9 +15,9 @@
 #include "util.h"
 #include "mixer.h"
 
-Game::Game(SystemStub *stub, FileSystem *fs, const char *savePath, int level, ResourceType ver, Language lang, WidescreenMode widescreenMode, bool autoSave)
+Game::Game(SystemStub *stub, FileSystem *fs, FileSystem *tune_fs, const char *savePath, int level, ResourceType ver, Language lang, WidescreenMode widescreenMode, bool autoSave)
 	: _cut(&_res, stub, &_vid), _menu(&_res, stub, &_vid),
-	_mix(fs, stub), _res(fs, ver, lang), _seq(stub, &_mix), _vid(&_res, stub, widescreenMode),
+	_mix(tune_fs, stub), _res(fs, ver, lang), _seq(stub, &_mix), _vid(&_res, stub, widescreenMode),
 	_stub(stub), _fs(fs), _savePath(savePath) {
 	_stateSlot = 1;
 	_inp_demPos = 0;
@@ -381,6 +381,10 @@ void Game::mainLoop() {
 		return;
 	}
 	if (_deathCutsceneCounter) {
+		if (_mix._backgroundMusicType != Mixer::MT_NONE) {
+			_mix._musicTrack = -1;
+			_mix.stopMusic();
+		}
 		--_deathCutsceneCounter;
 		if (_deathCutsceneCounter == 0) {
 			playCutscene(_cut._deathCutsceneId);
@@ -482,7 +486,6 @@ void Game::playCutscene(int id) {
 	if (id != -1) {
 		_cut._id = id;
 	}
-	debug(DBG_INFO, "Cut scene %d", _cut._id);
 	if (_cut._id != 0xFFFF) {
 		if (_stub->hasWidescreen()) {
 			_stub->enableWidescreen(false);

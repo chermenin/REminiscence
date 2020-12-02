@@ -19,7 +19,7 @@ DEPS = $(SRCS:.cpp=.d) $(SCALERS:.cpp=.d)
 
 LIBS = $(SDL_LIBS) $(MODPLUG_LIBS) $(TREMOR_LIBS) $(ZLIB_LIBS)
 
-rs: $(OBJS)
+fb: $(OBJS)
 	$(CXX) $(LDFLAGS) -o $@ $(OBJS) $(LIBS)
 
 clean:
