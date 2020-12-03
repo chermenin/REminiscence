@@ -172,6 +172,7 @@ static WidescreenMode parseWidescreen(const char *mode) {
 		WidescreenMode mode;
 	} modes[] = {
 		{ "adjacent", kWidescreenAdjacentRooms },
+		{ "adjacent-blur", kWidescreenAdjacentRoomsBlur },
 		{ "mirror", kWidescreenMirrorRoom },
 		{ "blur", kWidescreenBlur },
 		{ 0, kWidescreenNone },

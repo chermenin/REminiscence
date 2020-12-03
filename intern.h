@@ -119,6 +119,7 @@ enum WidescreenMode {
 	kWidescreenAdjacentRooms,
 	kWidescreenMirrorRoom,
 	kWidescreenBlur,
+	kWidescreenAdjacentRoomsBlur,
 };
 
 struct Options {
