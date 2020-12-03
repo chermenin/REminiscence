@@ -1053,10 +1053,10 @@ void SystemStub_SDL::setScaler(const ScalerParameters *parameters) {
 		{ "point", kScalerTypePoint, 0 },
 		{ "linear", kScalerTypeLinear, 0 },
 		{ "scale", kScalerTypeInternal, &_internalScaler },
+		{ "xbr", kScalerTypeInternal, &scaler_xbr },
 #ifdef USE_STATIC_SCALER
 		{ "nearest", kScalerTypeInternal, &scaler_nearest },
 		{ "tv2x", kScalerTypeInternal, &scaler_tv2x },
-		{ "xbr", kScalerTypeInternal, &scaler_xbr },
 #endif
 		{ 0, -1 }
 	};

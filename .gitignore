@@ -1,6 +1,9 @@
 # IDE
 .vscode/
 
+# Build
+build/
+
 # Folders
 .DS_Store/
 DATA/

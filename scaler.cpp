@@ -6,6 +6,7 @@
 
 #include "scaler.h"
 #include "util.h"
+#include "xbrz.h"
 
 static void scanline2x(uint32_t *dst0, uint32_t *dst1, const uint32_t *src0, const uint32_t *src1, const uint32_t *src2, int w) {
 	uint32_t B, D, E, F, H;
@@ -280,4 +281,15 @@ const Scaler _internalScaler = {
 	"scaleNx",
 	2, 4,
 	scaleNx,
+};
+
+static void Nxbrz(int factor, uint32_t *dst, int dstPitch, const uint32_t *src, int srcPitch, int w, int h) {
+	xbrz::scale(factor, src, dst, w, h, xbrz::ColorFormat::RGB);
+}
+
+const Scaler scaler_xbr = {
+	SCALER_TAG,
+	"Nxbrz",
+	2, 6,
+	Nxbrz,
 };

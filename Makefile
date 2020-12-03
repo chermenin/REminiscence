@@ -11,7 +11,7 @@ CXXFLAGS += -Wall -Wpedantic -MMD $(SDL_CFLAGS) -DUSE_MODPLUG -DUSE_TREMOR -DUSE
 SRCS = collision.cpp cpc_player.cpp cutscene.cpp decode_mac.cpp file.cpp fs.cpp game.cpp graphics.cpp main.cpp \
 	menu.cpp mixer.cpp mod_player.cpp ogg_player.cpp piege.cpp protection.cpp resource.cpp resource_aba.cpp \
 	resource_mac.cpp scaler.cpp screenshot.cpp seq_player.cpp \
-	sfx_player.cpp staticres.cpp systemstub_sdl.cpp unpack.cpp util.cpp video.cpp
+	sfx_player.cpp staticres.cpp systemstub_sdl.cpp unpack.cpp util.cpp video.cpp xbrz.cpp
 
 
 OBJS = $(SRCS:.cpp=.o) $(SCALERS:.cpp=.o)

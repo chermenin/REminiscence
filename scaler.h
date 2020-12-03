@@ -28,13 +28,13 @@ struct Scaler {
 };
 
 extern const Scaler _internalScaler;
+extern const Scaler scaler_xbr;
 
 const Scaler *findScaler(const char *name);
 
 #ifdef USE_STATIC_SCALER
 extern const Scaler scaler_nearest;
 extern const Scaler scaler_tv2x;
-extern const Scaler scaler_xbr;
 #endif
 
 #endif // SCALER_H__
