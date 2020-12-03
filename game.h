@@ -95,6 +95,7 @@ struct Game {
 	AnimBufferState _animBuffer3State[12];
 	AnimBuffers _animBuffers;
 	uint16_t _deathCutsceneCounter;
+	int _deathBackgroundMusicTrack;
 	bool _saveStateCompleted;
 	bool _endLoop;
 	uint32_t _frameTimestamp;

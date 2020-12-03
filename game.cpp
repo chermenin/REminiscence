@@ -364,6 +364,7 @@ void Game::resetGameState() {
 	_cut._deathCutsceneId = 0xFFFF;
 	_pge_opTempVar2 = 0xFFFF;
 	_deathCutsceneCounter = 0;
+	_deathBackgroundMusicTrack = -1;
 	_saveStateCompleted = false;
 	_loadMap = true;
 	pge_resetGroups();
@@ -381,7 +382,8 @@ void Game::mainLoop() {
 		return;
 	}
 	if (_deathCutsceneCounter) {
-		if (_mix._backgroundMusicType != Mixer::MT_NONE) {
+		if (_mix._backgroundMusicType != Mixer::MT_NONE && _mix._musicTrack != -1) {
+			_deathBackgroundMusicTrack = _mix._musicTrack;
 			_mix._musicTrack = -1;
 			_mix.stopMusic();
 		}
@@ -2206,6 +2208,9 @@ void Game::loadState(File *f) {
 			pge->next_PGE_in_room = _pge_liveTable1[pge->room_location];
 			_pge_liveTable1[pge->room_location] = pge;
 		}
+	}
+	if (_deathBackgroundMusicTrack != -1) {
+		_mix.playMusic(_deathBackgroundMusicTrack);
 	}
 	resetGameState();
 }
