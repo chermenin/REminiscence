@@ -132,6 +132,7 @@ struct Options {
 	bool use_seq_cutscenes;
 	bool use_words_protection;
 	bool use_white_tshirt;
+	bool use_wrike_tshirt;
 	bool play_asc_cutscene;
 	bool play_caillou_cutscene;
 	bool play_metro_cutscene;

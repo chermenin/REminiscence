@@ -181,9 +181,15 @@ void Video::setPaletteSlotLE(int palSlot, const uint8_t *palData) {
 		Color c = AMIGA_convertColor(color);
 		_stub->setPaletteEntry(palSlot * 16 + i, &c);
 	}
-	if (palSlot == 4 && g_options.use_white_tshirt) {
-		const Color color12 = AMIGA_convertColor(0x888);
-		const Color color13 = AMIGA_convertColor((palData == _conradPal2) ? 0x888 : 0xCCC);
+	if (palSlot == 4 && (g_options.use_white_tshirt || g_options.use_wrike_tshirt)) {
+		Color color12, color13;
+		if (g_options.use_wrike_tshirt) {
+			color12 = AMIGA_convertColor(0x373);
+			color13 = AMIGA_convertColor((palData == _conradPal2) ? 0x373 : 0x5A5);
+		} else {
+			color12 = AMIGA_convertColor(0x888);
+			color13 = AMIGA_convertColor((palData == _conradPal2) ? 0x888 : 0xCCC);
+		}
 		_stub->setPaletteEntry(palSlot * 16 + 12, &color12);
 		_stub->setPaletteEntry(palSlot * 16 + 13, &color13);
 	}

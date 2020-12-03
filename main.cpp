@@ -95,6 +95,7 @@ static void initOptions() {
 	g_options.use_seq_cutscenes = true;
 	g_options.use_words_protection = false;
 	g_options.use_white_tshirt = true; 
+	g_options.use_wrike_tshirt = false;
 	g_options.play_asc_cutscene = true;
 	g_options.play_caillou_cutscene = true;
 	g_options.play_metro_cutscene = true;
@@ -193,6 +194,7 @@ int main(int argc, char *argv[]) {
 	int levelNum = 0;
 	bool fullscreen = true;
 	bool autoSave = false;
+	bool useWrikeTShirt = false;
 	WidescreenMode widescreen = kWidescreenNone;
 	ScalerParameters scalerParameters = ScalerParameters::defaults();
 	int forcedLanguage = -1;
@@ -205,15 +207,16 @@ int main(int argc, char *argv[]) {
 	}
 	while (1) {
 		static struct option options[] = {
-			{ "datapath",   required_argument, 0, 1 },
-			{ "savepath",   required_argument, 0, 2 },
-			{ "tunepath",   required_argument, 0, 3 },
-			{ "levelnum",   required_argument, 0, 4 },
-			{ "window",	    no_argument,       0, 5 },
-			{ "scaler",     required_argument, 0, 6 },
-			{ "language",   required_argument, 0, 7 },
-			{ "widescreen", required_argument, 0, 8 },
-			{ "autosave",   no_argument,       0, 9 },
+			{ "datapath",   required_argument, 0, 1  },
+			{ "savepath",   required_argument, 0, 2  },
+			{ "tunepath",   required_argument, 0, 3  },
+			{ "levelnum",   required_argument, 0, 4  },
+			{ "window",	    no_argument,       0, 5  },
+			{ "scaler",     required_argument, 0, 6  },
+			{ "language",   required_argument, 0, 7  },
+			{ "widescreen", required_argument, 0, 8  },
+			{ "autosave",   no_argument,       0, 9  },
+			{ "wrike",      no_argument,       0, 10 },
 			{ 0, 0, 0, 0 }
 		};
 		int index;
@@ -268,12 +271,18 @@ int main(int argc, char *argv[]) {
 		case 9:
 			autoSave = true;
 			break;
+		case 10:
+			useWrikeTShirt = true;
+			break;
 		default:
 			printf(USAGE, argv[0]);
 			return 0;
 		}
 	}
 	initOptions();
+	if (useWrikeTShirt) {
+		g_options.use_wrike_tshirt = true;
+	}
 	g_debugMask = DBG_INFO; // | DBG_MOD | DBG_SFX | DBG_SND | DBG_FILE | DBG_CUT | DBG_VIDEO | DBG_RES | DBG_MENU | DBG_PGE | DBG_GAME | DBG_UNPACK | DBG_COL
 	FileSystem fs(dataPath);
 	FileSystem tune_fs(tunePath);
