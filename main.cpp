@@ -22,10 +22,10 @@ static const char *USAGE =
 	"  --savepath=PATH   Path to save files (default 'SAVE')\n"
 	"  --tunepath=PATH   Path to sound and music files (default 'TUNES')\n"
 	"  --levelnum=NUM    Start to level, bypass introduction\n"
-	"  --fullscreen      Fullscreen display\n"
+	"  --window          Play in window\n"
 	"  --widescreen=MODE 16:9 display (adjacent,mirror,blur,none)\n"
 	"  --scaler=NAME@X   Graphics scaler (default 'scale@3')\n"
-	"  --language=LANG   Language (fr,en,de,sp,it,jp)\n"
+	"  --language=LANG   Language (fr,en,de,sp,it,jp,ru)\n"
 	"  --autosave        Save game state automatically\n"
 ;
 

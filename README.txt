@@ -42,10 +42,10 @@ These paths can be changed using command line switches :
     --datapath=PATH   Path to data files (default 'DATA')
     --savepath=PATH   Path to save files (default '.')
     --levelnum=NUM    Level to start from (default '0')
-    --fullscreen      Fullscreen display
+    --window          Play in window
     --widescreen=MODE 16:9 display (adjacent,mirror,blur,none)
     --scaler=NAME@X   Graphics scaler (default 'scale@3')
-    --language=LANG   Language (fr,en,de,sp,it,jp)
+    --language=LANG   Language (fr,en,de,sp,it,jp,ru)
     --autosave        Save game state automatically
 
 The scaler option specifies the algorithm used to smoothen the image in
