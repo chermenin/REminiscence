@@ -1115,18 +1115,18 @@ void SystemStub_SDL::changeScaler(int scalerNum) {
 		type = kScalerTypeInternal;
 		scaler = &_internalScaler;
 		break;
-#ifdef USE_STATIC_SCALER
 	case 3:
+		type = kScalerTypeInternal;
+		scaler = &scaler_xbr;
+		break;
+#ifdef USE_STATIC_SCALER
+	case 4:
 		type = kScalerTypeInternal;
 		scaler = &scaler_nearest;
 		break;
-	case 4:
-		type = kScalerTypeInternal;
-		scaler = &scaler_tv2x;
-		break;
 	case 5:
 		type = kScalerTypeInternal;
-		scaler = &scaler_xbr;
+		scaler = &scaler_tv2x;
 		break;
 #endif
 	default:
