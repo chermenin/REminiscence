@@ -10,7 +10,7 @@ DATA/
 SAVE/
 ORIG/
 TUNES/
-tremor/
+deps/
 
 # Prerequisites
 *.d
