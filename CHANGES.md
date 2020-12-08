@@ -1,3 +1,16 @@
+# Changelog
+
+### REinforced:
+
+* release 0.5.0 (2020/12/07)
+	- fixed some sounds and music
+	- added support for Russian language
+	- included XBRZ scaler
+	- other little fixes and improvements
+
+
+### Original REminiscence:
+
 * release 0.4.6
 	- added rewind to automatic saves
 	- fixed passwords and protection codes input
