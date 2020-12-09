@@ -11,7 +11,7 @@
 #include "util.h"
 #include "video.h"
 
-static void scalePoints(Point *pt, int count, int scale) {
+static void scalePoints(IntPoint *pt, int count, int scale) {
 	if (scale != 1) {
 		while (count-- > 0) {
 			pt->x *= scale;
@@ -315,7 +315,7 @@ void Cutscene::drawShape(const uint8_t *data, int16_t x, int16_t y) {
 	_gfx.setLayer(_page1, _vid->_w);
 	uint8_t numVertices = *data++;
 	if (numVertices & 0x80) {
-		Point pt;
+		IntPoint pt;
 		pt.x = READ_BE_UINT16(data) + x; data += 2;
 		pt.y = READ_BE_UINT16(data) + y; data += 2;
 		uint16_t rx = READ_BE_UINT16(data); data += 2;
@@ -323,13 +323,13 @@ void Cutscene::drawShape(const uint8_t *data, int16_t x, int16_t y) {
 		scalePoints(&pt, 1, _vid->_layerScale);
 		_gfx.drawEllipse(_primitiveColor, _hasAlphaColor, &pt, rx, ry);
 	} else if (numVertices == 0) {
-		Point pt;
+		IntPoint pt;
 		pt.x = READ_BE_UINT16(data) + x; data += 2;
 		pt.y = READ_BE_UINT16(data) + y; data += 2;
 		scalePoints(&pt, 1, _vid->_layerScale);
 		_gfx.drawPoint(_primitiveColor, &pt);
 	} else {
-		Point *pt = _vertices;
+		IntPoint *pt = _vertices;
 		int16_t ix = READ_BE_UINT16(data); data += 2;
 		int16_t iy = READ_BE_UINT16(data); data += 2;
 		pt->x = ix + x;
@@ -464,8 +464,8 @@ void Cutscene::drawShapeScale(const uint8_t *data, int16_t zoom, int16_t b, int1
 	uint8_t numVertices = *data++;
 	if (numVertices & 0x80) {
 		int16_t x, y;
-		Point *pt = _vertices;
-		Point pr[2];
+		IntPoint *pt = _vertices;
+		IntPoint pr[2];
 		_shape_cur_x = b + READ_BE_UINT16(data); data += 2;
 		_shape_cur_y = c + READ_BE_UINT16(data); data += 2;
 		x = READ_BE_UINT16(data); data += 2;
@@ -504,7 +504,7 @@ void Cutscene::drawShapeScale(const uint8_t *data, int16_t zoom, int16_t b, int1
 		_shape_prev_y = _shape_cur_y;
 		_shape_prev_x16 = _shape_cur_x16;
 		_shape_prev_y16 = _shape_cur_y16;
-		Point po;
+		IntPoint po;
 		po.x = _vertices[0].x + d + _shape_ix;
 		po.y = _vertices[0].y + e + _shape_iy;
 		int16_t rx = _vertices[0].x - _vertices[2].x;
@@ -512,7 +512,7 @@ void Cutscene::drawShapeScale(const uint8_t *data, int16_t zoom, int16_t b, int1
 		scalePoints(&po, 1, _vid->_layerScale);
 		_gfx.drawEllipse(_primitiveColor, _hasAlphaColor, &po, rx, ry);
 	} else if (numVertices == 0) {
-		Point pt;
+		IntPoint pt;
  		pt.x = _shape_cur_x = b + READ_BE_UINT16(data); data += 2;
 	 	pt.y = _shape_cur_y = c + READ_BE_UINT16(data); data += 2;
  		if (_shape_count == 0) {
@@ -535,7 +535,7 @@ void Cutscene::drawShapeScale(const uint8_t *data, int16_t zoom, int16_t b, int1
 		scalePoints(&pt, 1, _vid->_layerScale);
 		_gfx.drawPoint(_primitiveColor, &pt);
 	} else {
-		Point *pt = _vertices;
+		IntPoint *pt = _vertices;
 		int16_t ix, iy;
 		_shape_cur_x = ix = READ_BE_UINT16(data) + b; data += 2;
 		_shape_cur_y = iy = READ_BE_UINT16(data) + c; data += 2;
@@ -646,8 +646,8 @@ void Cutscene::drawShapeScaleRotate(const uint8_t *data, int16_t zoom, int16_t b
 	uint8_t numVertices = *data++;
 	if (numVertices & 0x80) {
 		int16_t x, y, ix, iy;
-		Point pr[2];
-		Point *pt = _vertices;
+		IntPoint pr[2];
+		IntPoint *pt = _vertices;
 		_shape_cur_x = ix = b + READ_BE_UINT16(data); data += 2;
 		_shape_cur_y = iy = c + READ_BE_UINT16(data); data += 2;
 		x = READ_BE_UINT16(data); data += 2;
@@ -688,7 +688,7 @@ void Cutscene::drawShapeScaleRotate(const uint8_t *data, int16_t zoom, int16_t b
 		_shape_prev_y = _shape_cur_y;
 		_shape_prev_x16 = _shape_cur_x16;
 		_shape_prev_y16 = _shape_cur_y16;
-		Point po;
+		IntPoint po;
 		po.x = _vertices[0].x + d + _shape_ix;
 		po.y = _vertices[0].y + e + _shape_iy;
 		int16_t rx = _vertices[0].x - _vertices[2].x;
@@ -696,7 +696,7 @@ void Cutscene::drawShapeScaleRotate(const uint8_t *data, int16_t zoom, int16_t b
 		scalePoints(&po, 1, _vid->_layerScale);
 		_gfx.drawEllipse(_primitiveColor, _hasAlphaColor, &po, rx, ry);
 	} else if (numVertices == 0) {
-		Point pt;
+		IntPoint pt;
 		pt.x = b + READ_BE_UINT16(data); data += 2;
 		pt.y = c + READ_BE_UINT16(data); data += 2;
 		_shape_cur_x16 = _shape_ix - pt.x;
@@ -724,7 +724,7 @@ void Cutscene::drawShapeScaleRotate(const uint8_t *data, int16_t zoom, int16_t b
 		_gfx.drawPoint(_primitiveColor, &pt);
 	} else {
 		int16_t x, y, a, shape_last_x, shape_last_y;
-		Point tempVertices[40];
+		IntPoint tempVertices[40];
 		_shape_cur_x = b + READ_BE_UINT16(data); data += 2;
 		x = _shape_cur_x;
 		_shape_cur_y = c + READ_BE_UINT16(data); data += 2;
@@ -745,7 +745,7 @@ void Cutscene::drawShapeScaleRotate(const uint8_t *data, int16_t zoom, int16_t b
 
 		int16_t ix = x;
 		int16_t iy = y;
-		Point *pt2 = tempVertices;
+		IntPoint *pt2 = tempVertices;
 		int16_t sx = 0;
 		for (int16_t n = numVertices - 1; n >= 0; --n) {
 			x = (int8_t)(*data++) + sx;
@@ -768,7 +768,7 @@ void Cutscene::drawShapeScaleRotate(const uint8_t *data, int16_t zoom, int16_t b
 				++pt2;
 			}
 		}
-		Point *pt = _vertices;
+		IntPoint *pt = _vertices;
 		if (_shape_count == 0) {
 			ix = _shape_ox;
 			iy = _shape_oy;
@@ -1248,7 +1248,7 @@ void Cutscene::drawSetShape(const uint8_t *p, uint16_t offset, int x, int y, uin
 		if (verticesCount == 255) {
 			int rx = (int16_t)READ_BE_UINT16(p + offset); offset += 2;
 			int ry = (int16_t)READ_BE_UINT16(p + offset); offset += 2;
-			Point pt;
+			IntPoint pt;
 			pt.x = x + ix;
 			pt.y = y + iy;
 			scalePoints(&pt, 1, _vid->_layerScale);

@@ -9,6 +9,20 @@
 
 #include "intern.h"
 #include "scaler.h"
+#include "shaders.h"
+
+#ifdef __APPLE__
+#include "CoreFoundation/CoreFoundation.h"
+#include <OpenGL/OpenGL.h>
+#if ESSENTIAL_GL_PRACTICES_SUPPORT_GL3
+#include <OpenGL/gl3.h>
+#else
+#include <OpenGL/gl.h>
+#endif //!ESSENTIAL_GL_PRACTICES_SUPPORT_GL3
+#else
+#include <SDL_opengl.h>
+#include <SDL_opengl_glext.h>
+#endif
 
 struct PlayerInput {
 	enum {
@@ -56,7 +70,7 @@ struct SystemStub {
 
 	virtual ~SystemStub() {}
 
-	virtual void init(const char *title, int w, int h, bool fullscreen, int widescreenMode, const ScalerParameters *scalerParameters) = 0;
+	virtual void init(const char *title, int w, int h, bool fullscreen, int widescreenMode, const ScalerParameters *scalerParameters, const Shaders *shaders) = 0;
 	virtual void destroy() = 0;
 
 	virtual bool hasWidescreen() const = 0;

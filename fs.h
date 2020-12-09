@@ -9,6 +9,7 @@
 
 #include "intern.h"
 
+struct FileName;
 struct FileSystem_impl;
 
 struct FileSystem {
@@ -19,6 +20,8 @@ struct FileSystem {
 
 	char *findPath(const char *filename) const;
 	bool exists(const char *filename) const;
+	int filesCount() const;
+	char *getFileName(int index) const;
 };
 
 #endif // FS_H__

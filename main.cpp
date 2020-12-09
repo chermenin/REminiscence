@@ -12,6 +12,7 @@
 #include "fs.h"
 #include "game.h"
 #include "scaler.h"
+#include "shaders.h"
 #include "systemstub.h"
 #include "util.h"
 
@@ -191,6 +192,7 @@ int main(int argc, char *argv[]) {
 	const char *dataPath = "DATA";
 	const char *savePath = "SAVE";
 	const char *tunePath = "TUNES";
+	const char *shaderPath = "SHADERS";
 	int levelNum = 0;
 	bool fullscreen = true;
 	bool autoSave = false;
@@ -210,13 +212,14 @@ int main(int argc, char *argv[]) {
 			{ "datapath",   required_argument, 0, 1  },
 			{ "savepath",   required_argument, 0, 2  },
 			{ "tunepath",   required_argument, 0, 3  },
-			{ "levelnum",   required_argument, 0, 4  },
-			{ "window",	    no_argument,       0, 5  },
-			{ "scaler",     required_argument, 0, 6  },
-			{ "language",   required_argument, 0, 7  },
-			{ "widescreen", required_argument, 0, 8  },
-			{ "autosave",   no_argument,       0, 9  },
-			{ "wrike",      no_argument,       0, 10 },
+			{ "shaderpath", required_argument, 0, 4  },
+			{ "levelnum",   required_argument, 0, 5  },
+			{ "window",	    no_argument,       0, 6  },
+			{ "scaler",     required_argument, 0, 7  },
+			{ "language",   required_argument, 0, 8  },
+			{ "widescreen", required_argument, 0, 9  },
+			{ "autosave",   no_argument,       0, 10 },
+			{ "wrike",      no_argument,       0, 11 },
 			{ 0, 0, 0, 0 }
 		};
 		int index;
@@ -235,15 +238,18 @@ int main(int argc, char *argv[]) {
 			tunePath = strdup(optarg);
 			break;
 		case 4:
-			levelNum = atoi(optarg);
+			shaderPath = strdup(optarg);
 			break;
 		case 5:
-			fullscreen = false;
+			levelNum = atoi(optarg);
 			break;
 		case 6:
+			fullscreen = false;
+			break;
+		case 7:
 			parseScaler(optarg, &scalerParameters);
 			break;
-		case 7: {
+		case 8: {
 				static const struct {
 					int lang;
 					const char *str;
@@ -265,13 +271,13 @@ int main(int argc, char *argv[]) {
 				}
 			}
 			break;
-		case 8:
+		case 9:
 			widescreen = parseWidescreen(optarg);
 			break;
-		case 9:
+		case 10:
 			autoSave = true;
 			break;
-		case 10:
+		case 11:
 			useWrikeTShirt = true;
 			break;
 		default:
@@ -283,9 +289,10 @@ int main(int argc, char *argv[]) {
 	if (useWrikeTShirt) {
 		g_options.use_wrike_tshirt = true;
 	}
-	g_debugMask = DBG_INFO; // | DBG_MOD | DBG_SFX | DBG_SND | DBG_FILE | DBG_CUT | DBG_VIDEO | DBG_RES | DBG_MENU | DBG_PGE | DBG_GAME | DBG_UNPACK | DBG_COL
+	g_debugMask = DBG_INFO | DBG_SHADER; // | DBG_MOD | DBG_SFX | DBG_SND | DBG_FILE | DBG_CUT | DBG_VIDEO | DBG_RES | DBG_MENU | DBG_PGE | DBG_GAME | DBG_UNPACK | DBG_COL
 	FileSystem fs(dataPath);
 	FileSystem tune_fs(tunePath);
+	FileSystem shaders_fs(shaderPath);
 	const int version = detectVersion(&fs);
 	if (version == -1) {
 		error("Unable to find data files, check that all required files are present");
@@ -294,7 +301,8 @@ int main(int argc, char *argv[]) {
 	const Language language = (forcedLanguage == -1) ? detectLanguage(&fs) : (Language)forcedLanguage;
 	SystemStub *stub = SystemStub_SDL_create();
 	Game *g = new Game(stub, &fs, &tune_fs, savePath, levelNum, (ResourceType)version, language, widescreen, autoSave);
-	stub->init(g_caption, g->_vid._w, g->_vid._h, fullscreen, widescreen, &scalerParameters);
+	Shaders *shaders = new Shaders(&shaders_fs);
+	stub->init(g_caption, g->_vid._w, g->_vid._h, fullscreen, widescreen, &scalerParameters, shaders);
 	g->run();
 	delete g;
 	stub->destroy();

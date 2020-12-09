@@ -147,7 +147,7 @@ struct Color {
 	uint8_t b;
 };
 
-struct Point {
+struct IntPoint {
 	int16_t x;
 	int16_t y;
 };

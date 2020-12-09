@@ -23,7 +23,8 @@ enum {
 	DBG_MOD    = 1 << 10,
 	DBG_SFX    = 1 << 11,
 	DBG_FILE   = 1 << 12,
-	DBG_DEMO   = 1 << 13
+	DBG_DEMO   = 1 << 13,
+	DBG_SHADER = 1 << 14
 };
 
 extern uint16_t g_debugMask;

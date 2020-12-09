@@ -54,9 +54,11 @@ struct SystemStub_SDL : SystemStub {
 	SDL_Texture *_widescreenTexture;
 	int _wideMargin;
 	bool _enableWidescreen;
+	const Shaders *_shaders;
+	int _shaderProgramId;
 
 	virtual ~SystemStub_SDL() {}
-	virtual void init(const char *title, int w, int h, bool fullscreen, int widescreenMode, const ScalerParameters *scalerParameters);
+	virtual void init(const char *title, int w, int h, bool fullscreen, int widescreenMode, const ScalerParameters *scalerParameters, const Shaders *shaders);
 	virtual void destroy();
 	virtual bool hasWidescreen() const;
 	virtual void setScreenSize(int w, int h);
@@ -98,8 +100,15 @@ SystemStub *SystemStub_SDL_create() {
 	return new SystemStub_SDL();
 }
 
-void SystemStub_SDL::init(const char *title, int w, int h, bool fullscreen, int widescreenMode, const ScalerParameters *scalerParameters) {
-	SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_JOYSTICK);
+void SystemStub_SDL::init(const char *title, int w, int h, bool fullscreen, int widescreenMode, const ScalerParameters *scalerParameters, const Shaders *shaders) {
+	_shaderProgramId = 0;
+	_shaders = shaders;
+	if (_shaders->_filesCount > 0) {
+		SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_JOYSTICK | SDL_VIDEO_OPENGL);
+		SDL_SetHint(SDL_HINT_RENDER_DRIVER, "opengl");
+	} else {
+		SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_JOYSTICK);
+	}
 	SDL_ShowCursor(SDL_DISABLE);
 	_caption = title;
 	memset(&_pi, 0, sizeof(_pi));
@@ -515,7 +524,56 @@ void SystemStub_SDL::fadeScreen() {
 	_fadeOnUpdateScreen = true;
 }
 
+/**
+ * OpenGL rendering back buffer.
+ */
+void presentBackBuffer(SDL_Renderer *renderer, SDL_Window* window, SDL_Texture* backBuffer, GLuint programId, SDL_Rect *r) {
+	GLint oldProgramId;
+
+	SDL_SetRenderTarget(renderer, NULL);
+	SDL_RenderClear(renderer);
+
+	SDL_GL_BindTexture(backBuffer, NULL, NULL);
+	if(programId != 0) {
+		glGetIntegerv(GL_CURRENT_PROGRAM,&oldProgramId);
+		glUseProgram(programId);
+	}
+
+	GLfloat minx, miny, maxx, maxy;
+	GLfloat minu, maxu, minv, maxv;
+
+	minx = (float)r->x;
+	miny = (float)r->y;
+	maxx = (float)r->w / 2;
+	maxy = (float)r->h / 2;
+
+	minu = 0.0f;
+	maxu = 1.0f;
+	minv = 0.0f;
+	maxv = 1.0f;
+
+	glBegin(GL_TRIANGLE_STRIP);
+		glTexCoord2f(minu, minv);
+		glVertex2f(minx, miny);
+		glTexCoord2f(maxu, minv);
+		glVertex2f(maxx, miny);
+		glTexCoord2f(minu, maxv);
+		glVertex2f(minx, maxy);
+		glTexCoord2f(maxu, maxv);
+		glVertex2f(maxx, maxy);
+	glEnd();
+	SDL_GL_SwapWindow(window);
+
+	if(programId != 0) {
+		glUseProgram(oldProgramId);
+	}
+}
+
 void SystemStub_SDL::updateScreen(int shakeOffset) {
+	if (_shaderProgramId != 0) {
+		SDL_SetRenderTarget(_renderer, _texture);
+		SDL_RenderClear(_renderer);
+	}
 	if (_texW != _screenW || _texH != _screenH) {
 		void *dst = 0;
 		int pitch = 0;
@@ -563,7 +621,14 @@ void SystemStub_SDL::updateScreen(int shakeOffset) {
 		SDL_RenderGetLogicalSize(_renderer, &r.w, &r.h);
 		SDL_RenderCopy(_renderer, _texture, 0, &r);
 	}
-	SDL_RenderPresent(_renderer);
+	if (_shaderProgramId != 0) {
+		SDL_Rect r;
+		r.x = r.y = 0;
+		SDL_GetRendererOutputSize(_renderer, &r.w, &r.h);
+		presentBackBuffer(_renderer, _window, _texture, _shaderProgramId, &r);
+	} else {
+		SDL_RenderPresent(_renderer);
+	}
 }
 
 void SystemStub_SDL::processEvents() {
@@ -997,7 +1062,18 @@ void SystemStub_SDL::prepareGraphics() {
 		SDL_SetWindowIcon(_window, icon);
 		SDL_FreeSurface(icon);
 	}
-	_renderer = SDL_CreateRenderer(_window, -1, SDL_RENDERER_ACCELERATED);
+	_renderer = SDL_CreateRenderer(_window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_TARGETTEXTURE);
+
+	if (_shaders->_filesCount > 0) {
+		SDL_RendererInfo rendererInfo;
+		SDL_GetRendererInfo(_renderer, &rendererInfo);
+		if(strncmp(rendererInfo.name, "opengl", 6) == 0) {
+			debug(DBG_SHADER, "Init OpenGL renderer");
+			_shaderProgramId = _shaders->compileProgram();
+			debug(DBG_SHADER, "Shader program id = %d", _shaderProgramId);
+		}
+	}
+
 	SDL_RenderSetLogicalSize(_renderer, windowW, windowH);
 	_texture = SDL_CreateTexture(_renderer, kPixelFormat, SDL_TEXTUREACCESS_STREAMING, _texW, _texH);
 	if (_widescreenMode != kWidescreenNone) {

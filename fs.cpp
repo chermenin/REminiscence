@@ -59,8 +59,7 @@ struct FileSystem_impl {
 		return -1;
 	}
 
-	char *getPath(const char *name) const {
-		const int i = findPathIndex(name);
+	char *getPath(int i) const {
 		if (i >= 0) {
 			const char *dir = _dirsList[_filesList[i].dir];
 			const int len = strlen(dir) + 1 + strlen(_filesList[i].name) + 1;
@@ -71,6 +70,11 @@ struct FileSystem_impl {
 			return p;
 		}
 		return 0;
+	}
+
+	char *getPath(const char *name) const {
+		const int i = findPathIndex(name);
+		return getPath(i);
 	}
 
 	void addPath(const char *dir, const char *name) {
@@ -172,4 +176,15 @@ bool FileSystem::exists(const char *filename) const {
 	}
 #endif
 	return false;
+}
+
+int FileSystem::filesCount() const {
+	return _impl->_filesCount;
+}
+
+ char *FileSystem::getFileName(int index) const {
+	char* path = _impl->getPath(index);
+	char *sep = strrchr(path, '/');
+	if(!sep || sep == path) return path;
+	return sep + 1;
 }

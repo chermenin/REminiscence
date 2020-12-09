@@ -20,14 +20,14 @@ void Graphics::setClippingRect(int16_t rx, int16_t ry, int16_t rw, int16_t rh) {
 	_crh = rh;
 }
 
-void Graphics::drawPoint(uint8_t color, const Point *pt) {
+void Graphics::drawPoint(uint8_t color, const IntPoint *pt) {
 	debug(DBG_VIDEO, "Graphics::drawPoint() col=0x%X x=%d, y=%d", color, pt->x, pt->y);
 	if (pt->x >= 0 && pt->x < _crw && pt->y >= 0 && pt->y < _crh) {
 		*(_layer + (pt->y + _cry) * _layerPitch + pt->x + _crx) = color;
 	}
 }
 
-void Graphics::drawLine(uint8_t color, const Point *pt1, const Point *pt2) {
+void Graphics::drawLine(uint8_t color, const IntPoint *pt1, const IntPoint *pt2) {
 	debug(DBG_VIDEO, "Graphics::drawLine()");
 	int16_t dxincr1 = 1;
 	int16_t dyincr1 = 1;
@@ -59,7 +59,7 @@ void Graphics::drawLine(uint8_t color, const Point *pt1, const Point *pt2) {
 			dxincr2 = -1;
 		}
 	}
-	Point pt;
+	IntPoint pt;
 	pt.x = pt1->x;
 	pt.y = pt1->y;
 	int16_t octincr1 = delta1 * 2 - delta2 * 2;
@@ -97,7 +97,7 @@ void Graphics::addEllipseRadius(int16_t y, int16_t x1, int16_t x2) {
 	}
 }
 
-void Graphics::drawEllipse(uint8_t color, bool hasAlpha, const Point *pt, int16_t rx, int16_t ry) {
+void Graphics::drawEllipse(uint8_t color, bool hasAlpha, const IntPoint *pt, int16_t rx, int16_t ry) {
 	debug(DBG_VIDEO, "Graphics::drawEllipse()");
 	bool flag = false;
 	int16_t y = pt->y - ry;
@@ -232,7 +232,7 @@ void Graphics::fillArea(uint8_t color, bool hasAlpha) {
 	}
 }
 
-void Graphics::drawSegment(uint8_t color, bool hasAlpha, int16_t ys, const Point *pts, uint8_t numPts) {
+void Graphics::drawSegment(uint8_t color, bool hasAlpha, int16_t ys, const IntPoint *pts, uint8_t numPts) {
 	debug(DBG_VIDEO, "Graphics::drawSegment()");
 	int16_t xmin, xmax, ymin, ymax;
 	xmin = xmax = pts[0].x;
@@ -262,7 +262,7 @@ void Graphics::drawSegment(uint8_t color, bool hasAlpha, int16_t ys, const Point
 	fillArea(color, hasAlpha);
 }
 
-void Graphics::drawPolygonOutline(uint8_t color, const Point *pts, uint8_t numPts) {
+void Graphics::drawPolygonOutline(uint8_t color, const IntPoint *pts, uint8_t numPts) {
 	debug(DBG_VIDEO, "Graphics::drawPolygonOutline()");
 	assert(numPts >= 2);
 	int i;
@@ -339,7 +339,7 @@ static void drawPolygonHelper2(int32_t &x, int16_t &y, int32_t &step, int16_t *&
 	}
 }
 
-void Graphics::drawPolygon(uint8_t color, bool hasAlpha, const Point *pts, uint8_t numPts) {
+void Graphics::drawPolygon(uint8_t color, bool hasAlpha, const IntPoint *pts, uint8_t numPts) {
 	debug(DBG_VIDEO, "Graphics::drawPolygon()");
 	assert(numPts * 4 < 0x100);
 
