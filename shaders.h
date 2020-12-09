@@ -35,7 +35,6 @@ struct Shaders {
 
 	FileSystem *_fs;
 	int _filesCount;
-	bool _initExtensions;
 	int _programId;
 
 	Shaders(FileSystem *fs);

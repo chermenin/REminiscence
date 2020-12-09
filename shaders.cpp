@@ -25,25 +25,31 @@ PFNGLGETPROGRAMIVPROC glGetProgramiv;
 PFNGLGETPROGRAMINFOLOGPROC glGetProgramInfoLog;
 PFNGLUSEPROGRAMPROC glUseProgram;
 
-bool initGLExtensions() {
-	glCreateShader = (PFNGLCREATESHADERPROC)SDL_GL_GetProcAddress("glCreateShader");
-	glShaderSource = (PFNGLSHADERSOURCEPROC)SDL_GL_GetProcAddress("glShaderSource");
-	glCompileShader = (PFNGLCOMPILESHADERPROC)SDL_GL_GetProcAddress("glCompileShader");
-	glGetShaderiv = (PFNGLGETSHADERIVPROC)SDL_GL_GetProcAddress("glGetShaderiv");
-	glGetShaderInfoLog = (PFNGLGETSHADERINFOLOGPROC)SDL_GL_GetProcAddress("glGetShaderInfoLog");
-	glDeleteShader = (PFNGLDELETESHADERPROC)SDL_GL_GetProcAddress("glDeleteShader");
-	glAttachShader = (PFNGLATTACHSHADERPROC)SDL_GL_GetProcAddress("glAttachShader");
-	glCreateProgram = (PFNGLCREATEPROGRAMPROC)SDL_GL_GetProcAddress("glCreateProgram");
-	glLinkProgram = (PFNGLLINKPROGRAMPROC)SDL_GL_GetProcAddress("glLinkProgram");
-	glValidateProgram = (PFNGLVALIDATEPROGRAMPROC)SDL_GL_GetProcAddress("glValidateProgram");
-	glGetProgramiv = (PFNGLGETPROGRAMIVPROC)SDL_GL_GetProcAddress("glGetProgramiv");
-	glGetProgramInfoLog = (PFNGLGETPROGRAMINFOLOGPROC)SDL_GL_GetProcAddress("glGetProgramInfoLog");
-	glUseProgram = (PFNGLUSEPROGRAMPROC)SDL_GL_GetProcAddress("glUseProgram");
+bool _initGLExtensions = false;
 
-	return glCreateShader && glShaderSource && glCompileShader && glGetShaderiv && 
-		glGetShaderInfoLog && glDeleteShader && glAttachShader && glCreateProgram &&
-		glLinkProgram && glValidateProgram && glGetProgramiv && glGetProgramInfoLog &&
-		glUseProgram;
+bool initGLExtensions() {
+	if (!_initGLExtensions) {
+		glCreateShader = (PFNGLCREATESHADERPROC)SDL_GL_GetProcAddress("glCreateShader");
+		glShaderSource = (PFNGLSHADERSOURCEPROC)SDL_GL_GetProcAddress("glShaderSource");
+		glCompileShader = (PFNGLCOMPILESHADERPROC)SDL_GL_GetProcAddress("glCompileShader");
+		glGetShaderiv = (PFNGLGETSHADERIVPROC)SDL_GL_GetProcAddress("glGetShaderiv");
+		glGetShaderInfoLog = (PFNGLGETSHADERINFOLOGPROC)SDL_GL_GetProcAddress("glGetShaderInfoLog");
+		glDeleteShader = (PFNGLDELETESHADERPROC)SDL_GL_GetProcAddress("glDeleteShader");
+		glAttachShader = (PFNGLATTACHSHADERPROC)SDL_GL_GetProcAddress("glAttachShader");
+		glCreateProgram = (PFNGLCREATEPROGRAMPROC)SDL_GL_GetProcAddress("glCreateProgram");
+		glLinkProgram = (PFNGLLINKPROGRAMPROC)SDL_GL_GetProcAddress("glLinkProgram");
+		glValidateProgram = (PFNGLVALIDATEPROGRAMPROC)SDL_GL_GetProcAddress("glValidateProgram");
+		glGetProgramiv = (PFNGLGETPROGRAMIVPROC)SDL_GL_GetProcAddress("glGetProgramiv");
+		glGetProgramInfoLog = (PFNGLGETPROGRAMINFOLOGPROC)SDL_GL_GetProcAddress("glGetProgramInfoLog");
+		glUseProgram = (PFNGLUSEPROGRAMPROC)SDL_GL_GetProcAddress("glUseProgram");
+
+		_initGLExtensions = glCreateShader && glShaderSource && glCompileShader && glGetShaderiv && 
+			glGetShaderInfoLog && glDeleteShader && glAttachShader && glCreateProgram &&
+			glLinkProgram && glValidateProgram && glGetProgramiv && glGetProgramInfoLog &&
+			glUseProgram;
+	}
+
+	return _initGLExtensions;
 }
 
 #else
@@ -98,9 +104,7 @@ GLuint compileShader(const char* source, GLuint shaderType, const int len) {
 
 GLuint Shaders::compileProgram() const {
 	GLuint programId = 0;
-	GLuint vtxShaderId, fragShaderId;
-
-	if (_filesCount > 0) {
+	if (initGLExtensions() && _filesCount > 0) {
 		debug(DBG_SHADER, "Found %d shader files", _filesCount);
 		programId = glCreateProgram();
 
@@ -175,6 +179,5 @@ void useProgram(GLuint programId) {
 }
 
 Shaders::Shaders(FileSystem *fs) : _fs(fs) {
-	_initExtensions = initGLExtensions();
 	_filesCount = fs->filesCount();
 }
