@@ -527,7 +527,7 @@ void SystemStub_SDL::fadeScreen() {
 /**
  * OpenGL rendering back buffer.
  */
-void presentBackBuffer(SDL_Renderer *renderer, SDL_Window* window, SDL_Texture* backBuffer, GLuint programId, SDL_Rect *r) {
+void presentBackBuffer(SDL_Renderer *renderer, SDL_Window* window, SDL_Texture* backBuffer, GLuint programId) {
 	GLint oldProgramId;
 
 	SDL_SetRenderTarget(renderer, NULL);
@@ -542,10 +542,15 @@ void presentBackBuffer(SDL_Renderer *renderer, SDL_Window* window, SDL_Texture* 
 	GLfloat minx, miny, maxx, maxy;
 	GLfloat minu, maxu, minv, maxv;
 
-	minx = (float)r->x;
-	miny = (float)r->y;
-	maxx = (float)r->w / 2;
-	maxy = (float)r->h / 2;
+	int w, h;
+	SDL_RenderGetLogicalSize(renderer, &w, &h);
+	float scaleX, scaleY;
+	SDL_RenderGetScale(renderer, &scaleX, &scaleY);
+
+	minx = 0;
+	miny = 0;
+	maxx = (float)w * scaleX;
+	maxy = (float)h * scaleY;
 
 	minu = 0.0f;
 	maxu = 1.0f;
@@ -622,10 +627,7 @@ void SystemStub_SDL::updateScreen(int shakeOffset) {
 		SDL_RenderCopy(_renderer, _texture, 0, &r);
 	}
 	if (_shaderProgramId != 0) {
-		SDL_Rect r;
-		r.x = r.y = 0;
-		SDL_GetRendererOutputSize(_renderer, &r.w, &r.h);
-		presentBackBuffer(_renderer, _window, _texture, _shaderProgramId, &r);
+		presentBackBuffer(_renderer, _window, _texture, _shaderProgramId);
 	} else {
 		SDL_RenderPresent(_renderer);
 	}
