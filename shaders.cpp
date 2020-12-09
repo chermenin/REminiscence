@@ -62,9 +62,15 @@ const char *getFileExtension(const char *filename) {
 
 
 
-GLuint compileShader(const char* source, GLuint shaderType, const int *len) {
+GLuint compileShader(const char* source, GLuint shaderType, const int len) {
+	if (shaderType == GL_VERTEX_SHADER) {
+		debug(DBG_SHADER, "Compile vertex shader");
+	} else {
+		debug(DBG_SHADER, "Compile fragment shader");
+	}
+
 	GLuint result = glCreateShader(shaderType);
-	glShaderSource(result, 1, &source, len);
+	glShaderSource(result, 1, &source, &len);
 	glCompileShader(result);
 
 	GLint shaderCompiled = GL_FALSE;
@@ -110,25 +116,45 @@ GLuint Shaders::compileProgram() const {
 				} else {
 					f.read(_source, len);
 				}
-				GLuint shaderType;
 				const char* ext = getFileExtension(path);
+				int shaderId;
 				if (strcasecmp(ext, "vertex") == 0) {
-					shaderType = GL_VERTEX_SHADER;
+				 	shaderId = compileShader(_source, GL_VERTEX_SHADER, len);
+					if (shaderId) {
+						glAttachShader(programId, shaderId);
+						glDeleteShader(shaderId);
+					}
 				} else if (strcasecmp(ext, "fragment") == 0) {
-					shaderType = GL_FRAGMENT_SHADER;
+				 	shaderId = compileShader(_source, GL_FRAGMENT_SHADER, len);
+					if (shaderId) {
+						glAttachShader(programId, shaderId);
+						glDeleteShader(shaderId);
+					}
+				} else if (strcasecmp(ext, "glsl") == 0) {
+					char *fragment_source = (char *)malloc(len + 17);
+					strcpy(fragment_source, "#define FRAGMENT\n");
+					strcat(fragment_source, _source);
+				 	shaderId = compileShader(fragment_source, GL_FRAGMENT_SHADER, len + 17);
+					if (shaderId) {
+						glAttachShader(programId, shaderId);
+						glDeleteShader(shaderId);
+					}
+					char *vertex_source = (char *)malloc(len + 15);
+					strcpy(vertex_source, "#define VERTEX\n");
+					strcat(vertex_source, _source);
+				 	shaderId = compileShader(vertex_source, GL_VERTEX_SHADER, len + 15);
+					if (shaderId) {
+						glAttachShader(programId, shaderId);
+						glDeleteShader(shaderId);
+					}
 				} else {
 					error("Unknown shader: %s", ext);
-				}
-				int shaderId = compileShader(_source, shaderType, &len);
-				if (shaderId) {
-					glAttachShader(programId, shaderId);
-					// glDeleteShader(shaderId);
 				}
 			}
 		}
 
 		glLinkProgram(programId);
-		glValidateProgram(programId);
+		// glValidateProgram(programId);
 
 		// Check the status of the compile/link
 		GLint logLen;
