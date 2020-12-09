@@ -90,6 +90,7 @@ struct SystemStub {
 	virtual void enableWidescreen(bool enable) = 0;
 	virtual void fadeScreen() = 0;
 	virtual void updateScreen(int shakeOffset) = 0;
+	virtual void presentBackBuffer() = 0;
 
 	virtual void processEvents() = 0;
 	virtual void sleep(int duration) = 0;

@@ -56,6 +56,8 @@ struct SystemStub_SDL : SystemStub {
 	bool _enableWidescreen;
 	const Shaders *_shaders;
 	int _shaderProgramId;
+	SDL_Texture *_targetTexture;
+	int _targetW, _targetH;
 
 	virtual ~SystemStub_SDL() {}
 	virtual void init(const char *title, int w, int h, bool fullscreen, int widescreenMode, const ScalerParameters *scalerParameters, const Shaders *shaders);
@@ -77,6 +79,7 @@ struct SystemStub_SDL : SystemStub {
 	virtual void enableWidescreen(bool enable);
 	virtual void fadeScreen();
 	virtual void updateScreen(int shakeOffset);
+	virtual void presentBackBuffer();
 	virtual void processEvents();
 	virtual void sleep(int duration);
 	virtual uint32_t getTimeStamp();
@@ -132,6 +135,7 @@ void SystemStub_SDL::init(const char *title, int w, int h, bool fullscreen, int 
 	_screenW = _screenH = 0;
 	_widescreenMode = widescreenMode;
 	_widescreenTexture = 0;
+	_targetTexture = 0;
 	_wideMargin = 0;
 	_enableWidescreen = false;
 	setScreenSize(w, h);
@@ -527,30 +531,23 @@ void SystemStub_SDL::fadeScreen() {
 /**
  * OpenGL rendering back buffer.
  */
-void presentBackBuffer(SDL_Renderer *renderer, SDL_Window* window, SDL_Texture* backBuffer, GLuint programId) {
+void SystemStub_SDL::presentBackBuffer() {
 	GLint oldProgramId;
 
-	SDL_SetRenderTarget(renderer, NULL);
-	SDL_RenderClear(renderer);
+	SDL_SetRenderTarget(_renderer, NULL);
+	SDL_RenderClear(_renderer);
 
-	SDL_GL_BindTexture(backBuffer, NULL, NULL);
-	if(programId != 0) {
-		glGetIntegerv(GL_CURRENT_PROGRAM,&oldProgramId);
-		useProgram(programId);
-	}
+	SDL_GL_BindTexture(_targetTexture, NULL, NULL);
+	glGetIntegerv(GL_CURRENT_PROGRAM, &oldProgramId);
+	useProgram(_shaderProgramId);
 
 	GLfloat minx, miny, maxx, maxy;
 	GLfloat minu, maxu, minv, maxv;
 
-	int w, h;
-	SDL_RenderGetLogicalSize(renderer, &w, &h);
-	float scaleX, scaleY;
-	SDL_RenderGetScale(renderer, &scaleX, &scaleY);
-
 	minx = 0;
 	miny = 0;
-	maxx = (float)w * scaleX;
-	maxy = (float)h * scaleY;
+	maxx = (float)_targetW;
+	maxy = (float)_targetH;
 
 	minu = 0.0f;
 	maxu = 1.0f;
@@ -558,27 +555,21 @@ void presentBackBuffer(SDL_Renderer *renderer, SDL_Window* window, SDL_Texture* 
 	maxv = 1.0f;
 
 	glBegin(GL_TRIANGLE_STRIP);
-		glTexCoord2f(minu, minv);
-		glVertex2f(minx, miny);
-		glTexCoord2f(maxu, minv);
-		glVertex2f(maxx, miny);
 		glTexCoord2f(minu, maxv);
-		glVertex2f(minx, maxy);
+		glVertex2f(minx, miny);
 		glTexCoord2f(maxu, maxv);
+		glVertex2f(maxx, miny);
+		glTexCoord2f(minu, minv);
+		glVertex2f(minx, maxy);
+		glTexCoord2f(maxu, minv);
 		glVertex2f(maxx, maxy);
 	glEnd();
-	SDL_GL_SwapWindow(window);
+	SDL_GL_SwapWindow(_window);
 
-	if(programId != 0) {
-		useProgram(oldProgramId);
-	}
+	useProgram(oldProgramId);
 }
 
 void SystemStub_SDL::updateScreen(int shakeOffset) {
-	if (_shaderProgramId != 0) {
-		SDL_SetRenderTarget(_renderer, _texture);
-		SDL_RenderClear(_renderer);
-	}
 	if (_texW != _screenW || _texH != _screenH) {
 		void *dst = 0;
 		int pitch = 0;
@@ -590,8 +581,10 @@ void SystemStub_SDL::updateScreen(int shakeOffset) {
 	} else {
 		SDL_UpdateTexture(_texture, 0, _screenBuffer, _screenW * sizeof(uint32_t));
 	}
+
+	SDL_SetRenderTarget(_renderer, _targetTexture);
 	SDL_RenderClear(_renderer);
-	if (_widescreenMode != kWidescreenNone) {
+	if (_widescreenMode != kWidescreenNone || _fullscreen) {
 		if (_enableWidescreen) {
 			// borders / background screen
 			SDL_RenderCopy(_renderer, _widescreenTexture, 0, 0);
@@ -600,8 +593,8 @@ void SystemStub_SDL::updateScreen(int shakeOffset) {
 		SDL_Rect r;
 		r.y = shakeOffset * _scaleFactor;
 		SDL_RenderGetLogicalSize(_renderer, &r.w, &r.h);
-		r.x = (r.w - _texW) / 2;
-		r.w = _texW;
+		r.x = (_targetW - (_targetH * _texW / _texH)) / 2;
+		r.w = _targetH * _texW / _texH;
 		SDL_RenderCopy(_renderer, _texture, 0, &r);
 	} else {
 		if (_fadeOnUpdateScreen) {
@@ -627,8 +620,11 @@ void SystemStub_SDL::updateScreen(int shakeOffset) {
 		SDL_RenderCopy(_renderer, _texture, 0, &r);
 	}
 	if (_shaderProgramId != 0) {
-		presentBackBuffer(_renderer, _window, _texture, _shaderProgramId);
+		presentBackBuffer();
 	} else {
+		SDL_SetRenderTarget(_renderer, NULL);
+		SDL_RenderClear(_renderer);
+		SDL_RenderCopy(_renderer, _targetTexture, 0, 0);
 		SDL_RenderPresent(_renderer);
 	}
 }
@@ -678,6 +674,11 @@ void SystemStub_SDL::processEvent(const SDL_Event &ev, bool &paused) {
 		case SDL_WINDOWEVENT_FOCUS_LOST:
 			paused = (ev.window.event == SDL_WINDOWEVENT_FOCUS_LOST);
 			SDL_PauseAudio(paused);
+			break;
+		case SDL_WINDOWEVENT_RESIZED:
+		case SDL_WINDOWEVENT_SIZE_CHANGED:
+		case SDL_WINDOWEVENT_MAXIMIZED:
+		case SDL_WINDOWEVENT_RESTORED:
 			break;
 		}
 		break;
@@ -1044,8 +1045,6 @@ void SystemStub_SDL::prepareGraphics() {
 	int flags = 0;
 	if (_fullscreen) {
 		flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
-	} else {
-		flags |= SDL_WINDOW_RESIZABLE;
 	}
 	if (0 /* && _widescreenMode == kWidescreenDefault */) {
 		SDL_DisplayMode dm;
@@ -1098,6 +1097,19 @@ void SystemStub_SDL::prepareGraphics() {
 		// left and right borders
 		_wideMargin = (w - _screenW) / 2;
 	}
+
+	float scaleX, scaleY;
+	SDL_RenderGetScale(_renderer, &scaleX, &scaleY);
+	if (_fullscreen) {
+		SDL_DisplayMode DM;
+		SDL_GetCurrentDisplayMode(0, &DM);
+		_targetW = DM.w;
+		_targetH = DM.h;
+	} else {
+		_targetW = windowW * scaleX;
+		_targetH = windowH * scaleY;
+	}
+	_targetTexture = SDL_CreateTexture(_renderer, kPixelFormat, SDL_TEXTUREACCESS_TARGET, _targetW, _targetH);
 }
 
 void SystemStub_SDL::cleanupGraphics() {
@@ -1108,6 +1120,10 @@ void SystemStub_SDL::cleanupGraphics() {
 	if (_widescreenTexture) {
 		SDL_DestroyTexture(_widescreenTexture);
 		_widescreenTexture = 0;
+	}
+	if (_targetTexture) {
+		SDL_DestroyTexture(_targetTexture);
+		_targetTexture = 0;
 	}
 	if (_renderer) {
 		SDL_DestroyRenderer(_renderer);
