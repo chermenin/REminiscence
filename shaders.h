@@ -8,6 +8,8 @@
 #define SHADERS_H__
 
 #include "intern.h"
+#include <SDL.h>
+#include <SDL_image.h>
 
 #ifdef __APPLE__
 #include "CoreFoundation/CoreFoundation.h"
@@ -26,6 +28,8 @@ struct FileName;
 struct File;
 struct FileSystem;
 struct SystemStub;
+
+void useProgram(GLuint programId);
 
 struct Shaders {
 

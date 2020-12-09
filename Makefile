@@ -5,8 +5,8 @@ SDL_LIBS     := `sdl2-config --libs`
 MODPLUG_LIBS := -lmodplug
 TREMOR_LIBS  := -lvorbisidec -logg
 ZLIB_LIBS    := -lz
-SDL_GPU_LIBS := -lSDL2_gpu
-GL_LIBS 	 := -framework OpenGL
+# GL_LIBS 	 := -framework OpenGL
+GL_LIBS 	 := -lGL
 
 CXX=g++
 CXXFLAGS += -std=c++17 -Wall -Wpedantic -MMD $(SDL_CFLAGS) -DUSE_MODPLUG -DUSE_TREMOR -DUSE_ZLIB
@@ -20,8 +20,8 @@ SRCS = collision.cpp cpc_player.cpp cutscene.cpp decode_mac.cpp file.cpp fs.cpp 
 OBJS = $(SRCS:.cpp=.o) $(SCALERS:.cpp=.o)
 DEPS = $(SRCS:.cpp=.d) $(SCALERS:.cpp=.d)
 
-# LIBS = $(SDL_LIBS) -Wl,-Bstatic $(MODPLUG_LIBS) $(TREMOR_LIBS) $(ZLIB_LIBS) $(SDL_GPU_LIBS) -Wl,-Bdynamic
-LIBS = $(SDL_LIBS) $(MODPLUG_LIBS) $(TREMOR_LIBS) $(ZLIB_LIBS) $(GL_LIBS) $(SDL_GPU_LIBS)
+# LIBS = $(SDL_LIBS) -Wl,-Bstatic $(MODPLUG_LIBS) $(TREMOR_LIBS) $(ZLIB_LIBS) $(GL_LIBS) -Wl,-Bdynamic
+LIBS = $(SDL_LIBS) $(MODPLUG_LIBS) $(TREMOR_LIBS) $(ZLIB_LIBS) $(GL_LIBS)
 
 fb: $(OBJS)
 	$(CXX) $(LDFLAGS) -o $@ $(OBJS) $(LIBS)

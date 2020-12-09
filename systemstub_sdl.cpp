@@ -536,7 +536,7 @@ void presentBackBuffer(SDL_Renderer *renderer, SDL_Window* window, SDL_Texture* 
 	SDL_GL_BindTexture(backBuffer, NULL, NULL);
 	if(programId != 0) {
 		glGetIntegerv(GL_CURRENT_PROGRAM,&oldProgramId);
-		glUseProgram(programId);
+		useProgram(programId);
 	}
 
 	GLfloat minx, miny, maxx, maxy;
@@ -570,7 +570,7 @@ void presentBackBuffer(SDL_Renderer *renderer, SDL_Window* window, SDL_Texture* 
 	SDL_GL_SwapWindow(window);
 
 	if(programId != 0) {
-		glUseProgram(oldProgramId);
+		useProgram(oldProgramId);
 	}
 }
 

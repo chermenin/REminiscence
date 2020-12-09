@@ -144,6 +144,10 @@ GLuint Shaders::compileProgram() const {
 	return programId;
 }
 
+void useProgram(GLuint programId) {
+	glUseProgram(programId);
+}
+
 Shaders::Shaders(FileSystem *fs) : _fs(fs) {
 	_initExtensions = initGLExtensions();
 	_filesCount = fs->filesCount();
