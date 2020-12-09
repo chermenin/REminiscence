@@ -1,17 +1,21 @@
-//
-// PUBLIC DOMAIN CRT STYLED SCAN-LINE SHADER
-//
-//   by Timothy Lottes
-//
-// This is more along the style of a really good CGA arcade monitor.
-// With RGB inputs instead of NTSC.
-// The shadow mask example has the mask rotated 90 degrees for less chromatic aberration.
-//
-// Left it unoptimized to show the theory behind the algorithm.
-//
-// It is an example what I personally would want as a display option for pixel art games.
-// Please take and use, change, or whatever.
-//
+// Parameter lines go here:
+#pragma parameter SCANTHICK "Scanline Thickness" 2.0 2.0 4.0 2.0
+#pragma parameter INTENSITY "Scanline Intensity" 0.15 0.0 1.0 0.01
+#pragma parameter BRIGHTBOOST "Luminance Boost" 0.15 0.0 1.0 0.01
+
+#if defined(VERTEX)
+
+varying vec4 v_color;
+varying vec2 v_texCoord;
+
+void main()
+{
+    gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;
+    v_color = gl_Color;
+    v_texCoord = vec2(gl_MultiTexCoord0);
+}
+
+#elif defined(FRAGMENT)
 
 varying vec4 v_color;
 varying vec2 v_texCoord;
@@ -140,3 +144,5 @@ void main(){
   gl_FragColor=v_color * vec4(fragColor.rgb, 1.0);
 }
 
+
+#endif

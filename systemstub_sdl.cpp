@@ -1074,6 +1074,15 @@ void SystemStub_SDL::prepareGraphics() {
 			_shaderProgramId = _shaders->compileProgram();
 			debug(DBG_SHADER, "Shader program id = %d", _shaderProgramId);
 		}
+
+		// OPENGL VERSION
+		SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
+
+		// DOUBLE BUFFER
+		SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+		SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
 	}
 
 	SDL_RenderSetLogicalSize(_renderer, windowW, windowH);
