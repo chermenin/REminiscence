@@ -9,7 +9,6 @@
 
 #include "intern.h"
 #include <SDL.h>
-#include <SDL_image.h>
 
 #ifdef __APPLE__
 #include "CoreFoundation/CoreFoundation.h"
