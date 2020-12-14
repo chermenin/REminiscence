@@ -4,6 +4,7 @@
  */
 
 #include <SDL.h>
+#include "resource.h"
 #include "scaler.h"
 #include "screenshot.h"
 #include "systemstub.h"
@@ -129,7 +130,7 @@ void SystemStub_SDL::init(const char *title, int w, int h, bool fullscreen, int 
 	_joystick = 0;
 	_controller = 0;
 	if (SDL_NumJoysticks() > 0) {
-		SDL_GameControllerAddMappingsFromFile("gamecontrollerdb.txt");
+		SDL_GameControllerAddMapping(Resource::_controllerMapping);
 		if (SDL_IsGameController(kJoystickIndex)) {
 			_controller = SDL_GameControllerOpen(kJoystickIndex);
 		}

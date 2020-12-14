@@ -123,6 +123,7 @@ struct Resource {
 	static const char *_splNames[];
 	static const uint8_t _gameSavedSoundData[];
 	static const uint16_t _gameSavedSoundLen;
+	static const char *_controllerMapping;
 
 	FileSystem *_fs;
 	ResourceType _type;
