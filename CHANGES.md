@@ -2,7 +2,10 @@
 
 ### REinforced:
 
-* release 0.5.0 (2020/12/07)
+* release 0.5.1 `2021-05-22`
+	- fixed XBRZ scaler
+
+* release 0.5.0 `2020-12-07`
 	- fixed some sounds and music
 	- added support for Russian language
 	- included XBRZ scaler
