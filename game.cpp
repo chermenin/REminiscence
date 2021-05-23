@@ -564,7 +564,7 @@ void Game::playCutscene(int id) {
 				_stub->setPaletteEntry(0xC0 + i, &palette[i]);
 			}
 		}
-		if (id == 0x3D && _res._type != kResourceTypeMac) {
+		if (_cut._id == 0x3D && _res._type != kResourceTypeMac) {
 			if (_mix._backgroundMusicType == Mixer::MT_OGG) {
 				_mix.playMusic(1009);
 			}
