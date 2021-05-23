@@ -131,11 +131,9 @@ void SystemStub_SDL::init(const char *title, int w, int h, bool fullscreen, int 
 	_controller = 0;
 	if (SDL_NumJoysticks() > 0) {
 		SDL_GameControllerAddMapping(Resource::_controllerMapping);
+		_joystick = SDL_JoystickOpen(kJoystickIndex);
 		if (SDL_IsGameController(kJoystickIndex)) {
 			_controller = SDL_GameControllerOpen(kJoystickIndex);
-		}
-		if (!_controller) {
-			_joystick = SDL_JoystickOpen(kJoystickIndex);
 		}
 	}
 	_screenshot = 1;
@@ -671,6 +669,8 @@ void SystemStub_SDL::processEvent(const SDL_Event &ev, bool &paused) {
 			case 3:
 				_pi.backspace = pressed;
 				break;
+			case 9:
+				_pi.escape = pressed;
 			}
 		}
 		break;
