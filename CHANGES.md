@@ -2,6 +2,10 @@
 
 ### REinforced:
 
+* release 0.5.2 `2021-05-23`
+	- fixed credits scene
+	- fixed controllers and joysticks
+
 * release 0.5.1 `2021-05-22`
 	- fixed XBRZ scaler
 

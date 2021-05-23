@@ -1,8 +1,8 @@
 
 # REminiscence / REinforced
 
-> Release version: 0.5.1  
-> Release date: 2021-05-22
+> Release version: 0.5.2  
+> Release date: 2021-05-23
 
 
 ## About
