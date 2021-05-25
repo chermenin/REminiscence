@@ -100,5 +100,6 @@ struct LockAudioStack {
 };
 
 extern SystemStub *SystemStub_SDL_create();
+extern SystemStub *SystemStub_GPU_create();
 
 #endif // SYSTEMSTUB_H__

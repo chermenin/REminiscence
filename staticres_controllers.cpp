@@ -2,7 +2,7 @@
 /*
  * REminiscence / REinforced
  * Copyright (C) 2005-2019 Gregory Montoir (cyx@users.sourceforge.net)
- * Copyright (C) 2020 Alex Chermenin (alex@chermenin.ru)
+ * Copyright (C) 2020-2021 Alex Chermenin (alex@chermenin.ru)
  */
 
 #include "resource.h"

@@ -292,7 +292,7 @@ int main(int argc, char *argv[]) {
 		return -1;
 	}
 	const Language language = (forcedLanguage == -1) ? detectLanguage(&fs) : (Language)forcedLanguage;
-	SystemStub *stub = SystemStub_SDL_create();
+	SystemStub *stub = SystemStub_GPU_create();
 	Game *g = new Game(stub, &fs, &tune_fs, savePath, levelNum, (ResourceType)version, language, widescreen, autoSave);
 	stub->init(g_caption, g->_vid._w, g->_vid._h, fullscreen, widescreen, &scalerParameters);
 	g->run();
