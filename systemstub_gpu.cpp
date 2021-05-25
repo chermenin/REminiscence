@@ -17,7 +17,7 @@ static const char *kIconBmp = "icon.bmp";
 static const int kJoystickIndex = 0;
 static const int kJoystickCommitValue = 3200;
 
-static const uint32_t kPixelFormat = SDL_PIXELFORMAT_RGB888;
+static const uint32_t kPixelFormat = SDL_PIXELFORMAT_ABGR8888;
 
 struct SystemStub_GPU : SystemStub {
 	SDL_Window *_window;
@@ -27,12 +27,12 @@ struct SystemStub_GPU : SystemStub {
 	SDL_GameController *_controller;
 	SDL_PixelFormat *_fmt;
 	const char *_caption;
-	unsigned char *_screenBuffer;
+	uint32_t *_screenBuffer;
 	bool _fullscreen;
 	uint8_t _overscanColor;
-	unsigned char _rgbPalette[256];
-	unsigned char _shadowPalette[256];
-	unsigned char _darkPalette[256];
+	uint32_t _rgbPalette[256];
+	uint32_t _shadowPalette[256];
+	uint32_t _darkPalette[256];
 	int _screenW, _screenH;
 	SDL_Joystick *_joystick;
 	bool _fadeOnUpdateScreen;
@@ -100,6 +100,7 @@ void SystemStub_GPU::init(const char *title, int w, int h, bool fullscreen, int 
 	_screen = 0;
 	_image = 0;
 	_fmt = SDL_AllocFormat(kPixelFormat);
+	_screenBuffer = 0;
 	_fadeOnUpdateScreen = false;
 	_fullscreen = fullscreen;
 	_scalerType = kScalerTypeInternal;
@@ -132,6 +133,10 @@ void SystemStub_GPU::init(const char *title, int w, int h, bool fullscreen, int 
 
 void SystemStub_GPU::destroy() {
 	cleanupGraphics();
+	if (_screenBuffer) {
+		free(_screenBuffer);
+		_screenBuffer = 0;
+	}
 	if (_fmt) {
 		SDL_FreeFormat(_fmt);
 		_fmt = 0;
@@ -160,16 +165,24 @@ void SystemStub_GPU::setScreenSize(int w, int h) {
 		return;
 	}
 	cleanupGraphics();
-	_screenBuffer = new unsigned char[w * h];
+	if (_screenBuffer) {
+		free(_screenBuffer);
+		_screenBuffer = 0;
+	}
+	const int screenBufferSize = w * h * sizeof(uint32_t);
+	_screenBuffer = (uint32_t *)calloc(1, screenBufferSize);
+	if (!_screenBuffer) {
+		error("SystemStub_SDL::setScreenSize() Unable to allocate offscreen buffer, w=%d, h=%d", w, h);
+	}
 	_screenW = w;
 	_screenH = h;
 	prepareGraphics();
 }
 
 void SystemStub_GPU::setPaletteColor(int color, int r, int g, int b) {
-	_rgbPalette[color] = (unsigned char)SDL_MapRGB(_fmt, r, g, b);
-	_shadowPalette[color] = (unsigned char)SDL_MapRGB(_fmt, r / 3, g / 3, b / 3);
-	_darkPalette[color] = (unsigned char)SDL_MapRGB(_fmt, r / 4, g / 4, b / 4);
+	_rgbPalette[color] = SDL_MapRGB(_fmt, r, g, b);
+	_shadowPalette[color] = SDL_MapRGB(_fmt, r / 3, g / 3, b / 3);
+	_darkPalette[color] = SDL_MapRGB(_fmt, r / 4, g / 4, b / 4);
 }
 
 void SystemStub_GPU::setPalette(const uint8_t *pal, int n) {
@@ -218,7 +231,7 @@ void SystemStub_GPU::copyRect(int x, int y, int w, int h, const uint8_t *buf, in
 		h = _screenH - y;
 	}
 
-	unsigned char *p = _screenBuffer + y * _screenW + x;
+	uint32_t *p = _screenBuffer + y * _screenW + x;
 	buf += y * pitch + x;
 
 	for (int j = 0; j < h; ++j) {
@@ -236,7 +249,7 @@ void SystemStub_GPU::copyRect(int x, int y, int w, int h, const uint8_t *buf, in
 
 void SystemStub_GPU::copyRectRgb24(int x, int y, int w, int h, const uint8_t *rgb) {
 	assert(x >= 0 && x + w <= _screenW && y >= 0 && y + h <= _screenH);
-	unsigned char *p = _screenBuffer + y * _screenW + x;
+	uint32_t *p = _screenBuffer + y * _screenW + x;
 
 	for (int j = 0; j < h; ++j) {
 		for (int i = 0; i < w; ++i) {
@@ -373,7 +386,7 @@ void SystemStub_GPU::copyWidescreenLeft(int w, int h, const uint8_t *buf, bool d
 
 	const int xOffset = w - _wideMargin;
 	GPU_Rect r = GPU_MakeRect(0, 0, _wideMargin, h);
-	GPU_UpdateImageBytes(_widescreenImage, &r, rgb + xOffset, w * sizeof(uint32_t));
+	GPU_UpdateImageBytes(_widescreenImage, &r, rgb + xOffset, w);
 }
 
 void SystemStub_GPU::copyWidescreenRight(int w, int h, const uint8_t *buf, bool dark) {
@@ -406,7 +419,7 @@ void SystemStub_GPU::copyWidescreenRight(int w, int h, const uint8_t *buf, bool 
 
 	const int xOffset = 0;
 	GPU_Rect r = GPU_MakeRect(_wideMargin + _screenW, 0, _wideMargin, h);
-	GPU_UpdateImageBytes(_widescreenImage, &r, rgb + xOffset, w * sizeof(uint32_t));
+	GPU_UpdateImageBytes(_widescreenImage, &r, rgb + xOffset, w);
 }
 
 void SystemStub_GPU::copyWidescreenMirror(int w, int h, const uint8_t *buf) {
@@ -478,45 +491,36 @@ void SystemStub_GPU::fadeScreen() {
 }
 
 void SystemStub_GPU::updateScreen(int shakeOffset) {
-	// if (_texW != _screenW || _texH != _screenH) {
-	// 	void *dst = 0;
-	// 	int pitch = 0;
-	// 	if (SDL_LockTexture(_image, 0, &dst, &pitch) == 0) {
-	// 		assert((pitch & 3) == 0);
-	// 		_scaler->scale(_scaleFactor, (uint32_t *)dst, pitch / sizeof(uint32_t), _screenBuffer, _screenW, _screenW, _screenH);
-	// 		SDL_UnlockTexture(_image);
-	// 	}
-	// } else {
-		GPU_UpdateImageBytes(_image, 0, _screenBuffer, _screenW * sizeof(uint32_t));
-	// }
+	if (_texW != _screenW || _texH != _screenH) {
+		uint32_t *dst = (uint32_t *)malloc(_screenW * _scaleFactor * _screenH * _scaleFactor);
+		_scaler->scale(_scaleFactor, (uint32_t *)dst, _screenW, _screenBuffer, _screenW, _screenW, _screenH);
+		GPU_UpdateImageBytes(_image, 0, (unsigned char *)dst, _screenW * sizeof(uint32_t));
+		free(dst);
+	} else {
+		GPU_UpdateImageBytes(_image, 0, (unsigned char *)_screenBuffer, _screenW * sizeof(uint32_t));
+	}
 	GPU_Clear(_screen);
 	if (_widescreenMode != kWidescreenNone) {
 		if (_enableWidescreen) {
 			// borders / background screen
-			GPU_Blit(_widescreenImage, NULL, _screen, 0, 0);
+			GPU_Blit(_widescreenImage, NULL, _screen,  _screen->w / 2, _screen->h / 2);
 		}
 		// game screen
-		GPU_Rect r;
-		r.y = shakeOffset * _scaleFactor;
-		r.h = _screen->h;
-		r.x = (_screen->w - _texW) / 2;
-		r.w = _texW;
-		GPU_Blit(_image, &r, _screen, 0, 0);
+		GPU_Blit(_image, NULL, _screen, _screen->w / 2, _screen->h / 2);
 	} else {
-		if (_fadeOnUpdateScreen) {
-			GPU_SetShapeBlendMode(GPU_BLEND_PREMULTIPLIED_ALPHA);
-			for (int i = 1; i <= 16; ++i) {
-				GPU_Blit(_image, NULL, _screen, 0, 0);
-				GPU_RectangleFilled(_screen, 0, 0, _screen->w, _screen->h, GPU_MakeColor(0, 0, 0, 256 - i * 16));
-				GPU_Flip(_screen);
-				SDL_Delay(30);
-			}
-			_fadeOnUpdateScreen = false;
-			GPU_SetShapeBlendMode(GPU_BLEND_NORMAL);
-			return;
-		}
-		GPU_Rect r = GPU_MakeRect(0, shakeOffset * _scaleFactor, _screen->w, _screen->h);
-		GPU_Blit(_image, &r, _screen, 0, 0);
+		// if (_fadeOnUpdateScreen) {
+		// 	GPU_SetShapeBlendMode(GPU_BLEND_PREMULTIPLIED_ALPHA);
+		// 	for (int i = 1; i <= 16; ++i) {
+		// 		GPU_Blit(_image, NULL, _screen,  _screen->w / 2, _screen->h / 2);
+		// 		GPU_RectangleFilled(_screen, 0, 0, _screen->w, _screen->h, GPU_MakeColor(0, 0, 0, 256 - i * 16));
+		// 		GPU_Flip(_screen);
+		// 		SDL_Delay(30);
+		// 	}
+		// 	_fadeOnUpdateScreen = false;
+		// 	GPU_SetShapeBlendMode(GPU_BLEND_NORMAL);
+		// 	return;
+		// }
+		GPU_Blit(_image, NULL, _screen, _screen->w / 2, _screen->h / 2);
 	}
 	GPU_Flip(_screen);
 }
@@ -736,6 +740,8 @@ void SystemStub_GPU::processEvent(const SDL_Event &ev, bool &paused) {
 					char name[32];
 					snprintf(name, sizeof(name), "screenshot-%03d.tga", _screenshot);
 					saveTGA(name, (const uint8_t *)_screenBuffer, _screenW, _screenH);
+					snprintf(name, sizeof(name), "screenshot-%03d.png", _screenshot);
+					GPU_SaveImage(_image, name, GPU_FILE_PNG);
 					++_screenshot;
 					debug(DBG_INFO, "Written '%s'", name);
 				}
@@ -956,7 +962,7 @@ void SystemStub_GPU::prepareGraphics() {
 	}
 	GPU_SetInitWindow(SDL_GetWindowID(_window));
 	_screen = GPU_Init(windowW, windowH, GPU_DEFAULT_INIT_FLAGS);
-	_image = GPU_CreateImage(_texW, _texH, GPU_FORMAT_RGBA);
+	_image = GPU_CreateImage(_screenW, _screenH, GPU_FORMAT_RGBA);
 	if (_widescreenMode != kWidescreenNone) {
 		// in blur mode, the background texture has the same dimensions as the game texture
 		// SDL stretches the texture to 16:9
