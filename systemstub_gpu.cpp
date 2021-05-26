@@ -492,9 +492,9 @@ void SystemStub_GPU::fadeScreen() {
 
 void SystemStub_GPU::updateScreen(int shakeOffset) {
 	if (_texW != _screenW || _texH != _screenH) {
-		uint32_t *dst = (uint32_t *)malloc(_screenW * _scaleFactor * _screenH * _scaleFactor);
-		_scaler->scale(_scaleFactor, (uint32_t *)dst, _screenW, _screenBuffer, _screenW, _screenW, _screenH);
-		GPU_UpdateImageBytes(_image, 0, (unsigned char *)dst, _screenW * sizeof(uint32_t));
+		uint32_t *dst = (uint32_t *)malloc(_texW * _texH * sizeof(uint32_t));
+		_scaler->scale(_scaleFactor, (uint32_t *)dst, _texW, _screenBuffer, _screenW, _screenW, _screenH);
+		GPU_UpdateImageBytes(_image, 0, (unsigned char *)dst, _texW * sizeof(uint32_t));
 		free(dst);
 	} else {
 		GPU_UpdateImageBytes(_image, 0, (unsigned char *)_screenBuffer, _screenW * sizeof(uint32_t));
@@ -503,25 +503,25 @@ void SystemStub_GPU::updateScreen(int shakeOffset) {
 	if (_widescreenMode != kWidescreenNone) {
 		if (_enableWidescreen) {
 			// borders / background screen
-			int h = (_widescreenMode == kWidescreenBlur) ? _screen->h * _screen->w / _screenW : _screenH;
+			int h = (_widescreenMode == kWidescreenBlur) ? _screen->h * _screen->w / _texW : _texH;
 			GPU_Rect r = GPU_MakeRect(0, (_screen->h - h) / 2, _screen->w, (3 * h - _screen->h) / 2);
 			GPU_BlitRect(_widescreenImage, NULL, _screen, &r);
 		}
 		// game screen
 		GPU_Blit(_image, NULL, _screen, _screen->w / 2, _screen->h / 2);
 	} else {
-		// if (_fadeOnUpdateScreen) {
-		// 	GPU_SetShapeBlendMode(GPU_BLEND_PREMULTIPLIED_ALPHA);
-		// 	for (int i = 1; i <= 16; ++i) {
-		// 		GPU_Blit(_image, NULL, _screen,  _screen->w / 2, _screen->h / 2);
-		// 		GPU_RectangleFilled(_screen, 0, 0, _screen->w, _screen->h, GPU_MakeColor(0, 0, 0, 256 - i * 16));
-		// 		GPU_Flip(_screen);
-		// 		SDL_Delay(30);
-		// 	}
-		// 	_fadeOnUpdateScreen = false;
-		// 	GPU_SetShapeBlendMode(GPU_BLEND_NORMAL);
-		// 	return;
-		// }
+		if (_fadeOnUpdateScreen) {
+			GPU_SetShapeBlendMode(GPU_BLEND_PREMULTIPLIED_ALPHA);
+			for (int i = 1; i <= 16; ++i) {
+				GPU_Blit(_image, NULL, _screen,  _screen->w / 2, _screen->h / 2);
+				GPU_RectangleFilled(_screen, 0, 0, _screen->w, _screen->h, GPU_MakeColor(0, 0, 0, 256 - i * 16));
+				GPU_Flip(_screen);
+				SDL_Delay(30);
+			}
+			_fadeOnUpdateScreen = false;
+			GPU_SetShapeBlendMode(GPU_BLEND_NORMAL);
+			return;
+		}
 		GPU_Blit(_image, NULL, _screen, _screen->w / 2, _screen->h / 2);
 	}
 	GPU_Flip(_screen);
@@ -923,19 +923,9 @@ static bool is16_9(const SDL_DisplayMode *mode) {
 void SystemStub_GPU::prepareGraphics() {
 	_texW = _screenW;
 	_texH = _screenH;
-	switch (_scalerType) {
-	case kScalerTypePoint:
-		SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "0"); // nearest pixel sampling
-		break;
-	case kScalerTypeLinear:
-		SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "1"); // linear filtering
-		break;
-	case kScalerTypeInternal:
-	case kScalerTypeExternal:
-		SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "1");
+	if (_scalerType == kScalerTypeInternal || _scalerType == kScalerTypeExternal) {
 		_texW *= _scaleFactor;
 		_texH *= _scaleFactor;
-		break;
 	}
 	int windowW = _screenW * _scaleFactor;
 	int windowH = _screenH * _scaleFactor;
@@ -968,7 +958,7 @@ void SystemStub_GPU::prepareGraphics() {
 	}
 	GPU_SetInitWindow(SDL_GetWindowID(_window));
 	_screen = GPU_Init(windowW, windowH, GPU_DEFAULT_INIT_FLAGS);
-	_image = GPU_CreateImage(_screenW, _screenH, GPU_FORMAT_RGBA);
+	_image = GPU_CreateImage(_texW, _texH, GPU_FORMAT_RGBA);
 	if (_widescreenMode != kWidescreenNone) {
 		// in blur mode, the background texture has the same dimensions as the game texture
 		const int w = (_widescreenMode == kWidescreenBlur) ? _screenW : _screenH * windowW / windowH;
@@ -977,6 +967,17 @@ void SystemStub_GPU::prepareGraphics() {
 
 		// left and right borders
 		_wideMargin = (w - _screenW) / 2;
+	}
+	if (_scalerType == kScalerTypePoint) {
+		GPU_SetImageFilter(_image, GPU_FILTER_NEAREST);
+		if (_widescreenImage) {
+			GPU_SetImageFilter(_widescreenImage, GPU_FILTER_NEAREST);
+		}
+	} else {
+		GPU_SetImageFilter(_image, GPU_FILTER_LINEAR);
+		if (_widescreenImage) {
+			GPU_SetImageFilter(_widescreenImage, GPU_FILTER_LINEAR);
+		}
 	}
 }
 

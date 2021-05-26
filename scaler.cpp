@@ -284,7 +284,7 @@ const Scaler _internalScaler = {
 };
 
 static void Nxbrz(int factor, uint32_t *dst, int dstPitch, const uint32_t *src, int srcPitch, int w, int h) {
-	xbrz::scale(factor, src, dst, w, h, xbrz::ColorFormat::RGB);
+	xbrz::scale(factor, src, dst, w, h, xbrz::ColorFormat::ARGB_UNBUFFERED);
 }
 
 const Scaler scaler_xbr = {
