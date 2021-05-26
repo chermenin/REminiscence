@@ -351,73 +351,77 @@ static void blur_v(int radius, const uint32_t *src, int srcPitch, int w, int h, 
 
 void SystemStub_GPU::copyWidescreenLeft(int w, int h, const uint8_t *buf, bool dark) {
 	assert(w >= _wideMargin);
-	uint32_t *rgb = (uint32_t *)malloc(w * h * sizeof(uint32_t));
+	uint32_t *rgb = (uint32_t *)malloc(_wideMargin * h * sizeof(uint32_t));
+	const int offset = w - _wideMargin;
 	if (buf) {
-		for (int i = 0; i < w * h; ++i) {
-			if (dark) {
-				rgb[i] = _darkPalette[buf[i]];
-			} else {
-				rgb[i] = _shadowPalette[buf[i]];
+		for (int y = 0; y < h; ++y) {
+			
+			for (int x = offset; x < w; ++x) {
+				if (dark) {
+					rgb[y * _wideMargin + x - offset] = _darkPalette[buf[y * w + x]];
+				} else {
+					rgb[y * _wideMargin + x - offset] = _shadowPalette[buf[y * w + x]];
+				}
 			}
 		}
 	} else {
-		unsigned char color = (unsigned char)SDL_MapRGB(_fmt, 0, 0, 0);
-		for (int i = 0; i < w * h; ++i) {
+		const uint32_t color = SDL_MapRGB(_fmt, 0, 0, 0);
+		for (int i = 0; i < _wideMargin * h; ++i) {
 			rgb[i] = color;
 		}
 	}
 
 	if (!dark) {
-		uint32_t *tmp = (uint32_t *)malloc(w * h * sizeof(uint32_t));
+		uint32_t *tmp = (uint32_t *)malloc(_wideMargin * h * sizeof(uint32_t));
 
 		if (rgb && tmp) {
 			static const int radius = 2;
-			blur_h(radius, rgb, w, w, h, _fmt, tmp, w);
-			blur_v(radius, tmp, w, w, h, _fmt, rgb, w);
+			blur_h(radius, rgb, _wideMargin, _wideMargin, h, _fmt, tmp, _wideMargin);
+			blur_v(radius, tmp, _wideMargin, _wideMargin, h, _fmt, rgb, _wideMargin);
 		}
 
 		free(tmp);
 	}
 
-	const int xOffset = w - _wideMargin;
 	GPU_Rect r = GPU_MakeRect(0, 0, _wideMargin, h);
-	GPU_UpdateImageBytes(_widescreenImage, &r, (unsigned char *)(rgb + xOffset), w);
+	GPU_UpdateImageBytes(_widescreenImage, &r, (unsigned char *)rgb, _wideMargin * sizeof(uint32_t));
 	free(rgb);
 }
 
 void SystemStub_GPU::copyWidescreenRight(int w, int h, const uint8_t *buf, bool dark) {
 	assert(w >= _wideMargin);
-	uint32_t *rgb = (uint32_t *)malloc(w * h * sizeof(uint32_t));
+	uint32_t *rgb = (uint32_t *)malloc(_wideMargin * h * sizeof(uint32_t));
 	if (buf) {
-		for (int i = 0; i < w * h; ++i) {
-			if (dark) {
-				rgb[i] = _darkPalette[buf[i]];
-			} else {
-				rgb[i] = _shadowPalette[buf[i]];
+		for (int y = 0; y < h; ++y) {
+			for (int x = 0; x < _wideMargin; ++x) {
+				if (dark) {
+					rgb[y * _wideMargin + x - 1] = _darkPalette[buf[y * w + x]];
+				} else {
+					rgb[y * _wideMargin + x - 1] = _shadowPalette[buf[y * w + x]];
+				}
 			}
 		}
 	} else {
-		const unsigned char color = (unsigned char)SDL_MapRGB(_fmt, 0, 0, 0);
-		for (int i = 0; i < w * h; ++i) {
+		const uint32_t color = SDL_MapRGB(_fmt, 0, 0, 0);
+		for (int i = 0; i < _wideMargin * h; ++i) {
 			rgb[i] = color;
 		}
 	}
 
 	if (!dark) {
-		uint32_t *tmp = (uint32_t *)malloc(w * h * sizeof(uint32_t));
+		uint32_t *tmp = (uint32_t *)malloc(_wideMargin * h * sizeof(uint32_t));
 
 		if (rgb && tmp) {
 			static const int radius = 2;
-			blur_h(radius, rgb, w, w, h, _fmt, tmp, w);
-			blur_v(radius, tmp, w, w, h, _fmt, rgb, w);
+			blur_h(radius, rgb, _wideMargin, _wideMargin, h, _fmt, tmp, _wideMargin);
+			blur_v(radius, tmp, _wideMargin, _wideMargin, h, _fmt, rgb, _wideMargin);
 		}
 
 		free(tmp);
 	}
 
-	const int xOffset = 0;
 	GPU_Rect r = GPU_MakeRect(_wideMargin + _screenW, 0, _wideMargin, h);
-	GPU_UpdateImageBytes(_widescreenImage, &r, (unsigned char *)(rgb + xOffset), w);
+	GPU_UpdateImageBytes(_widescreenImage, &r, (unsigned char *)rgb, _wideMargin * sizeof(uint32_t));
 	free(rgb);
 }
 
@@ -967,7 +971,6 @@ void SystemStub_GPU::prepareGraphics() {
 	_image = GPU_CreateImage(_screenW, _screenH, GPU_FORMAT_RGBA);
 	if (_widescreenMode != kWidescreenNone) {
 		// in blur mode, the background texture has the same dimensions as the game texture
-		// SDL stretches the texture to 16:9
 		const int w = (_widescreenMode == kWidescreenBlur) ? _screenW : _screenH * windowW / windowH;
 		const int h = _screenH;
 		_widescreenImage = GPU_CreateImage(w, h, GPU_FORMAT_RGBA);
