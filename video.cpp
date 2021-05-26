@@ -18,7 +18,7 @@ Video::Video(Resource *res, SystemStub *stub, WidescreenMode widescreenMode)
 	_h = GAMESCREEN_H * _layerScale;
 	_layerSize = _w * _h;
 	_frontLayer = (uint8_t *)calloc(1, _layerSize);
-	_backLayer = (uint8_t *)calloc(1,_layerSize);
+	_backLayer = (uint8_t *)calloc(1, _layerSize);
 	_tempLayer = (uint8_t *)calloc(1, _layerSize);
 	_tempLayer2 = (uint8_t *)calloc(1, _layerSize);
 	_screenBlocks = (uint8_t *)calloc(1, (_w / SCREENBLOCK_W) * (_h / SCREENBLOCK_H));
