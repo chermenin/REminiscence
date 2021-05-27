@@ -19,14 +19,6 @@ static const int kJoystickCommitValue = 3200;
 
 static const uint32_t kPixelFormat = SDL_PIXELFORMAT_RGB888;
 
-ScalerParameters ScalerParameters::defaults() {
-	ScalerParameters params;
-	params.type = kScalerTypeInternal;
-	params.name[0] = 0;
-	params.factor = _internalScaler.factorMin + (_internalScaler.factorMax - _internalScaler.factorMin) / 2;
-	return params;
-}
-
 struct SystemStub_SDL : SystemStub {
 	SDL_Window *_window;
 	SDL_Renderer *_renderer;

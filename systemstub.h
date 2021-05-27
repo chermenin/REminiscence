@@ -17,6 +17,7 @@ struct PlayerInput {
 		DIR_LEFT  = 1 << 2,
 		DIR_RIGHT = 1 << 3
 	};
+
 	enum {
 		DF_FASTMODE = 1 << 0,
 		DF_DBLOCKS  = 1 << 1,

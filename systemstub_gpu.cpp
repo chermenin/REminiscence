@@ -740,8 +740,8 @@ void SystemStub_GPU::processEvent(const SDL_Event &ev, bool &paused) {
 				break;
 			case SDLK_s: {
 					char name[32];
-					snprintf(name, sizeof(name), "screenshot-%03d.tga", _screenshot);
-					saveTGA(name, (const uint8_t *)_screenBuffer, _screenW, _screenH);
+					// snprintf(name, sizeof(name), "screenshot-%03d.tga", _screenshot);
+					// saveTGA(name, (const uint8_t *)_screenBuffer, _screenW, _screenH);
 					snprintf(name, sizeof(name), "screenshot-%03d.png", _screenshot);
 					GPU_SaveImage(_image, name, GPU_FILE_PNG);
 					++_screenshot;
@@ -992,6 +992,7 @@ void SystemStub_GPU::cleanupGraphics() {
 	}
 	if (_screen) {
 		GPU_FreeTarget(_screen);
+		GPU_CloseCurrentRenderer();
 		_screen = 0;
 	}
 	if (_window) {
@@ -1001,13 +1002,20 @@ void SystemStub_GPU::cleanupGraphics() {
 }
 
 void SystemStub_GPU::changeGraphics(bool fullscreen, int scaleFactor) {
-	int factor = CLIP(scaleFactor, _scaler->factorMin, _scaler->factorMax);
-	if (fullscreen == _fullscreen && factor == _scaleFactor) {
+	if (_scaler) {
+		int factor = CLIP(scaleFactor, _scaler->factorMin, _scaler->factorMax);
+		if (fullscreen == _fullscreen && factor == _scaleFactor) {
+			// no change
+			return;
+		}
+		_scaleFactor = factor;
+	} else if (fullscreen == _fullscreen) {
 		// no change
 		return;
 	}
+
+	// change graphics
 	_fullscreen = fullscreen;
-	_scaleFactor = factor;
 	cleanupGraphics();
 	prepareGraphics();
 }
