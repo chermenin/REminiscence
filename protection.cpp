@@ -6,7 +6,7 @@
 
 #include "game.h"
 #include "screenshot.h"
-#include "systemstub.h"
+#include "engine.h"
 
 static uint8_t reverseBits(uint8_t ch) {
 	static const uint8_t lut[] = {
@@ -66,7 +66,7 @@ bool Game::handleProtectionScreenShape() {
 	}
 	if (0) {
 		uint8_t palette[256 * 3];
-		_stub->getPalette(palette, 256);
+		_engine->getPalette(palette, 256);
 		for (int shape = 0; shape < 30; ++shape) {
 			_cut.drawProtectionShape(shape, 0);
 			char fname[32];
@@ -78,9 +78,9 @@ bool Game::handleProtectionScreenShape() {
 	const int codeNum = getRandomNumber() % 5;
 	for (int16_t zoom = 2000; zoom >= 0; zoom -= 100) {
 		_cut.drawProtectionShape(shapeNum, zoom);
-		_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._tempLayer, _vid._w);
-		_stub->updateScreen(0);
-		_stub->sleep(30);
+		_engine->copyRect(0, 0, _vid._w, _vid._h, _vid._tempLayer, _vid._w);
+		_engine->updateScreen(0);
+		_engine->sleep(30);
 	}
 	_vid.setTextPalette();
 
@@ -106,11 +106,11 @@ bool Game::handleProtectionScreenShape() {
 		snprintf(buf, sizeof(buf), "%s :  %s", codeNumber, codeText);
 		_vid.drawString(buf, 8 * Video::CHAR_W, 23 * Video::CHAR_H, _menu._charVar2);
 		_vid.updateScreen();
-		_stub->sleep(50);
-		_stub->processEvents();
-		char c = _stub->_pi.lastChar;
+		_engine->sleep(50);
+		_engine->processEvents();
+		char c = _engine->_pi.lastChar;
 		if (c != 0) {
-			_stub->_pi.lastChar = 0;
+			_engine->_pi.lastChar = 0;
 			if (len < kCodeLen) {
 				if ((c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9')) {
 					codeText[len] = c;
@@ -118,14 +118,14 @@ bool Game::handleProtectionScreenShape() {
 				}
 			}
 		}
-		if (_stub->_pi.backspace) {
-			_stub->_pi.backspace = false;
+		if (_engine->_pi.backspace) {
+			_engine->_pi.backspace = false;
 			if (len > 0) {
 				--len;
 			}
 		}
-		if (_stub->_pi.enter) {
-			_stub->_pi.enter = false;
+		if (_engine->_pi.enter) {
+			_engine->_pi.enter = false;
 			if (len > 0) {
 				int charsCount = 0;
 				if (_res.isAmiga()) {
@@ -143,7 +143,7 @@ bool Game::handleProtectionScreenShape() {
 				break;
 			}
 		}
-	} while (!_stub->_pi.quit);
+	} while (!_engine->_pi.quit);
 	_vid.fadeOut();
 	return valid;
 }
@@ -218,11 +218,11 @@ bool Game::handleProtectionScreenWords() {
 		codeText[len] = '\0';
 		_vid.drawString(codeText, 72 + (114 - strlen(codeText) * 8) / 2, 166, 0xE3);
 		_vid.updateScreen();
-		_stub->sleep(50);
-		_stub->processEvents();
-		char c = _stub->_pi.lastChar;
+		_engine->sleep(50);
+		_engine->processEvents();
+		char c = _engine->_pi.lastChar;
 		if (c != 0) {
-			_stub->_pi.lastChar = 0;
+			_engine->_pi.lastChar = 0;
 			if (len < kCodeLen) {
 				if (c >= 'A' && c <= 'Z') {
 					codeText[len] = c;
@@ -230,14 +230,14 @@ bool Game::handleProtectionScreenWords() {
 				}
 			}
 		}
-		if (_stub->_pi.backspace) {
-			_stub->_pi.backspace = false;
+		if (_engine->_pi.backspace) {
+			_engine->_pi.backspace = false;
 			if (len > 0) {
 				--len;
 			}
 		}
-		if (_stub->_pi.enter) {
-			_stub->_pi.enter = false;
+		if (_engine->_pi.enter) {
+			_engine->_pi.enter = false;
 			if (len > 0) {
 				int charsCount = 0;
 				for (int i = 0; i < len; ++i) {
@@ -250,7 +250,7 @@ bool Game::handleProtectionScreenWords() {
 				valid = decryptChar(protectionData[4 + charsCount]) == 0x20;
 			}
 		}
-	} while (!_stub->_pi.quit);
+	} while (!_engine->_pi.quit);
 	_vid.fadeOut();
 	return valid;
 }

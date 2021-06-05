@@ -40,7 +40,7 @@ struct MixerChannel {
 };
 
 struct FileSystem;
-struct SystemStub;
+struct Engine;
 
 struct Mixer {
 	typedef bool (*PremixHook)(void *userData, int16_t *buf, int len);
@@ -61,7 +61,7 @@ struct Mixer {
 	};
 
 	FileSystem *_fs;
-	SystemStub *_stub;
+	Engine *_engine;
 	MixerChannel _channels[NUM_CHANNELS];
 	PremixHook _premixHook;
 	void *_premixHookData;
@@ -73,7 +73,7 @@ struct Mixer {
 	SfxPlayer _sfx;
 	int _musicTrack;
 
-	Mixer(FileSystem *fs, SystemStub *stub);
+	Mixer(FileSystem *fs, Engine *engine);
 	void init();
 	void free();
 	void setPremixHook(PremixHook premixHook, void *userData);

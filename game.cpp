@@ -10,15 +10,15 @@
 #include "fs.h"
 #include "game.h"
 #include "seq_player.h"
-#include "systemstub.h"
+#include "engine.h"
 #include "unpack.h"
 #include "util.h"
 #include "mixer.h"
 
-Game::Game(SystemStub *stub, FileSystem *fs, FileSystem *tune_fs, const char *savePath, int level, ResourceType ver, Language lang, WidescreenMode widescreenMode, bool autoSave)
-	: _cut(&_res, stub, &_vid), _menu(&_res, stub, &_vid),
-	_mix(tune_fs, stub), _res(fs, ver, lang), _seq(stub, &_mix), _vid(&_res, stub, widescreenMode),
-	_stub(stub), _fs(fs), _savePath(savePath) {
+Game::Game(Engine *engine, FileSystem *fs, FileSystem *tune_fs, const char *savePath, int level, ResourceType ver, Language lang, WidescreenMode widescreenMode, bool autoSave)
+	: _cut(&_res, engine, &_vid), _menu(&_res, engine, &_vid),
+	_mix(tune_fs, engine), _res(fs, ver, lang), _seq(engine, &_mix), _vid(&_res, engine, widescreenMode),
+	_engine(engine), _fs(fs), _savePath(savePath) {
 	_stateSlot = 1;
 	_inp_demPos = 0;
 	_skillLevel = _menu._skill = kSkillNormal;
@@ -60,7 +60,7 @@ void Game::run() {
 
 	if (!g_options.bypass_protection && !g_options.use_words_protection && !_res.isMac()) {
 		while (!handleProtectionScreenShape()) {
-			if (_stub->_pi.quit) {
+			if (_engine->_pi.quit) {
 				return;
 			}
 		}
@@ -71,7 +71,7 @@ void Game::run() {
 
 	if (_res.isMac()) {
 		displayTitleScreenMac(Menu::kMacTitleScreen_MacPlay);
-		if (!_stub->_pi.quit) {
+		if (!_engine->_pi.quit) {
 			displayTitleScreenMac(Menu::kMacTitleScreen_Presage);
 		}
 	}
@@ -100,21 +100,21 @@ void Game::run() {
 
 	if (!g_options.bypass_protection && g_options.use_words_protection && _res.isDOS()) {
 		while (!handleProtectionScreenWords()) {
-			if (_stub->_pi.quit) {
+			if (_engine->_pi.quit) {
 				return;
 			}
 		}
 	}
 
 	bool presentMenu = ((_res._type != kResourceTypeDOS) || _res.fileExists("MENU1.MAP"));
-	while (!_stub->_pi.quit) {
+	while (!_engine->_pi.quit) {
 		if (presentMenu) {
 			_mix.playMusic(1);
 			switch (_res._type) {
 			case kResourceTypeDOS:
 				_menu.handleTitleScreen();
-				if (_menu._selectedOption == Menu::MENU_OPTION_ITEM_QUIT || _stub->_pi.quit) {
-					_stub->_pi.quit = true;
+				if (_menu._selectedOption == Menu::MENU_OPTION_ITEM_QUIT || _engine->_pi.quit) {
+					_engine->_pi.quit = true;
 					break;
 				}
 				if (_menu._selectedOption == Menu::MENU_OPTION_ITEM_DEMO) {
@@ -138,18 +138,18 @@ void Game::run() {
 				break;
 			case kResourceTypeAmiga:
 				displayTitleScreenAmiga();
-				_stub->setScreenSize(Video::GAMESCREEN_W, Video::GAMESCREEN_H);
+				_engine->setScreenSize(Video::GAMESCREEN_W, Video::GAMESCREEN_H);
 				break;
 			case kResourceTypeMac:
 				displayTitleScreenMac(Menu::kMacTitleScreen_Flashback);
 				break;
 			}
 		}
-		if (_stub->_pi.quit) {
+		if (_engine->_pi.quit) {
 			break;
 		}
-		if (_stub->hasWidescreen()) {
-			_stub->clearWidescreen();
+		if (_engine->hasWidescreen()) {
+			_engine->clearWidescreen();
 		}
 		if (_currentLevel == 7) {
 			_vid.fadeOut();
@@ -158,7 +158,7 @@ void Game::run() {
 		} else {
 			_vid.setTextPalette();
 			_vid.setPalette0xF();
-			_stub->setOverscanColor(0xE0);
+			_engine->setOverscanColor(0xE0);
 			_vid._unkPalSlot1 = 0;
 			_vid._unkPalSlot2 = 0;
 			_score = 0;
@@ -166,9 +166,9 @@ void Game::run() {
 			loadLevelData();
 			resetGameState();
 			_endLoop = false;
-			_frameTimestamp = _stub->getTimeStamp();
+			_frameTimestamp = _engine->getTimeStamp();
 			_saveTimestamp = _frameTimestamp;
-			while (!_stub->_pi.quit && !_endLoop) {
+			while (!_engine->_pi.quit && !_endLoop) {
 				mainLoop();
 				if (_demoBin != -1 && _inp_demPos >= _res._demLen) {
 					debug(DBG_DEMO, "End of demo");
@@ -178,10 +178,10 @@ void Game::run() {
 				}
 			}
 			// flush inputs
-			_stub->_pi.dirMask = 0;
-			_stub->_pi.enter = false;
-			_stub->_pi.space = false;
-			_stub->_pi.shift = false;
+			_engine->_pi.dirMask = 0;
+			_engine->_pi.enter = false;
+			_engine->_pi.space = false;
+			_engine->_pi.shift = false;
 		}
 	}
 
@@ -207,20 +207,20 @@ void Game::displayTitleScreenAmiga() {
 	};
 	for (int i = 0; i < 32; ++i) {
 		Color c = Video::AMIGA_convertColor(kAmigaColors[i]);
-		_stub->setPaletteEntry(i, &c);
+		_engine->setPaletteEntry(i, &c);
 	}
 	_vid.setTextPalette();
-	_stub->setScreenSize(kW, kH);
+	_engine->setScreenSize(kW, kH);
 	// fill with black
-	_stub->copyRect(0, 0, kW, kH, buf, kW);
-	_stub->updateScreen(0);
+	_engine->copyRect(0, 0, kW, kH, buf, kW);
+	_engine->updateScreen(0);
 	_vid.AMIGA_decodeCmp(_res._scratchBuffer + 6, buf);
 	int h = 0;
 	while (1) {
 		if (h <= kH / 2) {
 			const int y = kH / 2 - h;
-			_stub->copyRect(0, y, kW, h * 2, buf, kW);
-			_stub->updateScreen(0);
+			_engine->copyRect(0, y, kW, h * 2, buf, kW);
+			_engine->updateScreen(0);
 			h += 2;
 		} else {
 			static const uint8_t selectedColor = 0xE4;
@@ -234,30 +234,30 @@ void Game::displayTitleScreenAmiga() {
 					_vid.AMIGA_drawStringChar(buf, kW, x + j * Video::CHAR_W, y, _res._fnt, color, str[j]);
 				}
 			}
-			if (_stub->_pi.dirMask & PlayerInput::DIR_UP) {
-				_stub->_pi.dirMask &= ~PlayerInput::DIR_UP;
+			if (_engine->_pi.dirMask & PlayerInput::DIR_UP) {
+				_engine->_pi.dirMask &= ~PlayerInput::DIR_UP;
 				if (_currentLevel > 0) {
 					--_currentLevel;
 				}
 			}
-			if (_stub->_pi.dirMask & PlayerInput::DIR_DOWN) {
-				_stub->_pi.dirMask &= ~PlayerInput::DIR_DOWN;
+			if (_engine->_pi.dirMask & PlayerInput::DIR_DOWN) {
+				_engine->_pi.dirMask &= ~PlayerInput::DIR_DOWN;
 				if (_currentLevel < 6) {
 					++_currentLevel;
 				}
 			}
-			_stub->copyRect(0, 0, kW, kH, buf, kW);
-			_stub->updateScreen(0);
+			_engine->copyRect(0, 0, kW, kH, buf, kW);
+			_engine->updateScreen(0);
 		}
-		_stub->processEvents();
-		if (_stub->_pi.quit) {
+		_engine->processEvents();
+		if (_engine->_pi.quit) {
 			break;
 		}
-		if (_stub->_pi.enter) {
-			_stub->_pi.enter = false;
+		if (_engine->_pi.enter) {
+			_engine->_pi.enter = false;
 			break;
 		}
-		_stub->sleep(30);
+		_engine->sleep(30);
 	}
 	free(buf);
 }
@@ -295,7 +295,7 @@ void Game::displayTitleScreenMac(int num) {
 		_res.MAC_copyClut16(palette, 0, clutBaseColor + i);
 		const int basePaletteColor = i * 16;
 		for (int j = 0; j < 16; ++j) {
-			_stub->setPaletteEntry(basePaletteColor + j, &palette[j]);
+			_engine->setPaletteEntry(basePaletteColor + j, &palette[j]);
 		}
 	}
 	if (num == Menu::kMacTitleScreen_MacPlay) {
@@ -304,19 +304,19 @@ void Game::displayTitleScreenMac(int num) {
 		for (int i = 12; i < 16; ++i) {
 			const int basePaletteColor = i * 16;
 			for (int j = 0; j < 16; ++j) {
-				_stub->setPaletteEntry(basePaletteColor + j, &palette[j]);
+				_engine->setPaletteEntry(basePaletteColor + j, &palette[j]);
 			}
 		}
 	} else if (num == Menu::kMacTitleScreen_Presage) {
 		Color c;
 		c.r = c.g = c.b = 0;
-		_stub->setPaletteEntry(0, &c);
+		_engine->setPaletteEntry(0, &c);
 	} else if (num == Menu::kMacTitleScreen_Flashback) {
 		_vid.setTextPalette();
 		_vid._charShadowColor = 0xE0;
 	}
-	_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
-	_stub->updateScreen(0);
+	_engine->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
+	_engine->updateScreen(0);
 	while (1) {
 		if (num == Menu::kMacTitleScreen_Flashback) {
 			static const uint8_t selectedColor = 0xE4;
@@ -325,29 +325,29 @@ void Game::displayTitleScreenMac(int num) {
 				const char *str = _menu.getLevelName(i);
 				_vid.drawString(str, 24, 24 + i * 16, (_currentLevel == i) ? selectedColor : defaultColor);
 			}
-			if (_stub->_pi.dirMask & PlayerInput::DIR_UP) {
-				_stub->_pi.dirMask &= ~PlayerInput::DIR_UP;
+			if (_engine->_pi.dirMask & PlayerInput::DIR_UP) {
+				_engine->_pi.dirMask &= ~PlayerInput::DIR_UP;
 				if (_currentLevel > 0) {
 					--_currentLevel;
 				}
 			}
-			if (_stub->_pi.dirMask & PlayerInput::DIR_DOWN) {
-				_stub->_pi.dirMask &= ~PlayerInput::DIR_DOWN;
+			if (_engine->_pi.dirMask & PlayerInput::DIR_DOWN) {
+				_engine->_pi.dirMask &= ~PlayerInput::DIR_DOWN;
 				if (_currentLevel < 6) {
 					++_currentLevel;
 				}
 			}
 			_vid.updateScreen();
 		}
-		_stub->processEvents();
-		if (_stub->_pi.quit) {
+		_engine->processEvents();
+		if (_engine->_pi.quit) {
 			break;
 		}
-		if (_stub->_pi.enter) {
-			_stub->_pi.enter = false;
+		if (_engine->_pi.enter) {
+			_engine->_pi.enter = false;
 			break;
 		}
-		_stub->sleep(30);
+		_engine->sleep(30);
 	}
 }
 
@@ -452,36 +452,36 @@ void Game::mainLoop() {
 	_vid.updateScreen();
 	updateTiming();
 	drawStoryTexts();
-	if (_stub->_pi.backspace) {
-		_stub->_pi.backspace = false;
+	if (_engine->_pi.backspace) {
+		_engine->_pi.backspace = false;
 		handleInventory();
 	}
-	if (_stub->_pi.escape) {
-		_stub->_pi.escape = false;
+	if (_engine->_pi.escape) {
+		_engine->_pi.escape = false;
 		if (_demoBin != -1 || handleConfigPanel()) {
 			_endLoop = true;
 			return;
 		}
 	}
 	inp_handleSpecialKeys();
-	if (_autoSave && _stub->getTimeStamp() - _saveTimestamp >= kAutoSaveIntervalMs) {
+	if (_autoSave && _engine->getTimeStamp() - _saveTimestamp >= kAutoSaveIntervalMs) {
 		// do not save if we died or about to
 		if (_pgeLive[0].life > 0 && _deathCutsceneCounter == 0) {
 			saveGameState(kAutoSaveSlot);
-			_saveTimestamp = _stub->getTimeStamp();
+			_saveTimestamp = _engine->getTimeStamp();
 		}
 	}
 }
 
 void Game::updateTiming() {
 	static const int frameHz = 30;
-	int32_t delay = _stub->getTimeStamp() - _frameTimestamp;
-	int32_t pause = (_stub->_pi.dbgMask & PlayerInput::DF_FASTMODE) ? 20 : (1000 / frameHz);
+	int32_t delay = _engine->getTimeStamp() - _frameTimestamp;
+	int32_t pause = (_engine->_pi.dbgMask & PlayerInput::DF_FASTMODE) ? 20 : (1000 / frameHz);
 	pause -= delay;
 	if (pause > 0) {
-		_stub->sleep(pause);
+		_engine->sleep(pause);
 	}
-	_frameTimestamp = _stub->getTimeStamp();
+	_frameTimestamp = _engine->getTimeStamp();
 }
 
 void Game::playCutscene(int id) {
@@ -489,8 +489,8 @@ void Game::playCutscene(int id) {
 		_cut._id = id;
 	}
 	if (_cut._id != 0xFFFF) {
-		if (_stub->hasWidescreen()) {
-			_stub->enableWidescreen(false);
+		if (_engine->hasWidescreen()) {
+			_engine->enableWidescreen(false);
 		}
 		_mix.stopMusic();
 		if (_res._hasSeqData) {
@@ -561,7 +561,7 @@ void Game::playCutscene(int id) {
 			_res.MAC_copyClut16(palette, 0, 0x37);
 			_res.MAC_copyClut16(palette, 1, 0x38);
 			for (int i = 0; i < 32; ++i) {
-				_stub->setPaletteEntry(0xC0 + i, &palette[i]);
+				_engine->setPaletteEntry(0xC0 + i, &palette[i]);
 			}
 		}
 		if (_cut._id == 0x3D && _res._type != kResourceTypeMac) {
@@ -571,8 +571,8 @@ void Game::playCutscene(int id) {
 			_cut.playCredits();
 		}
 		_mix.stopMusic();
-		if (_stub->hasWidescreen()) {
-			_stub->enableWidescreen(true);
+		if (_engine->hasWidescreen()) {
+			_engine->enableWidescreen(true);
 		}
 	}
 }
@@ -589,35 +589,35 @@ bool Game::playCutsceneSeq(const char *name) {
 }
 
 void Game::inp_handleSpecialKeys() {
-	if (_stub->_pi.dbgMask & PlayerInput::DF_SETLIFE) {
+	if (_engine->_pi.dbgMask & PlayerInput::DF_SETLIFE) {
 		_pgeLive[0].life = 0x7FFF;
 	}
-	if (_stub->_pi.load) {
+	if (_engine->_pi.load) {
 		loadGameState(_stateSlot);
-		_stub->_pi.load = false;
+		_engine->_pi.load = false;
 	}
-	if (_stub->_pi.save) {
+	if (_engine->_pi.save) {
 		_validSaveState = saveGameState(_stateSlot);
 		if (_validSaveState and g_options.play_gamesaved_sound) {
 			_mix.play(Resource::_gameSavedSoundData, Resource::_gameSavedSoundLen, 8000, Mixer::MAX_VOLUME);
 		}
-		_stub->_pi.save = false;
+		_engine->_pi.save = false;
 	}
-	if (_stub->_pi.stateSlot != 0) {
-		int8_t slot = _stateSlot + _stub->_pi.stateSlot;
+	if (_engine->_pi.stateSlot != 0) {
+		int8_t slot = _stateSlot + _engine->_pi.stateSlot;
 		if (slot >= 1 && slot < 100) {
 			_stateSlot = slot;
 			debug(DBG_INFO, "Current game state slot is %d", _stateSlot);
 		}
-		_stub->_pi.stateSlot = 0;
+		_engine->_pi.stateSlot = 0;
 	}
-	if (_stub->_pi.rewind) {
+	if (_engine->_pi.rewind) {
 		if (_rewindLen != 0) {
 			loadStateRewind();
 		} else {
 			debug(DBG_INFO, "Rewind buffer is empty");
 		}
-		_stub->_pi.rewind = false;
+		_engine->_pi.rewind = false;
 	}
 }
 
@@ -630,8 +630,8 @@ void Game::drawCurrentInventoryItem() {
 }
 
 void Game::showFinalScore() {
-	if (_stub->hasWidescreen()) {
-		_stub->clearWidescreen();
+	if (_engine->hasWidescreen()) {
+		_engine->clearWidescreen();
 	}
 	playCutscene(0x49);
 	char buf[50];
@@ -639,15 +639,15 @@ void Game::showFinalScore() {
 	_vid.drawString(buf, (Video::GAMESCREEN_W - strlen(buf) * Video::CHAR_W) / 2, 40, 0xE5);
 	const char *str = _menu.getLevelPassword(7, _skillLevel);
 	_vid.drawString(str, (Video::GAMESCREEN_W - strlen(str) * Video::CHAR_W) / 2, 16, 0xE7);
-	while (!_stub->_pi.quit) {
-		_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
-		_stub->updateScreen(0);
-		_stub->processEvents();
-		if (_stub->_pi.enter) {
-			_stub->_pi.enter = false;
+	while (!_engine->_pi.quit) {
+		_engine->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
+		_engine->updateScreen(0);
+		_engine->processEvents();
+		if (_engine->_pi.enter) {
+			_engine->_pi.enter = false;
 			break;
 		}
-		_stub->sleep(100);
+		_engine->sleep(100);
 	}
 }
 
@@ -732,7 +732,7 @@ bool Game::handleConfigPanel() {
 	enum { MENU_ITEM_ABORT = 1, MENU_ITEM_LOAD = 2, MENU_ITEM_SAVE = 3 };
 	uint8_t colors[] = { 2, 3, 3, 3 };
 	int current = 0;
-	while (!_stub->_pi.quit) {
+	while (!_engine->_pi.quit) {
 		_menu.drawString(_res.getMenuString(LocaleData::LI_18_RESUME_GAME), y + 2, 9, colors[0]);
 		_menu.drawString(_res.getMenuString(LocaleData::LI_19_ABORT_GAME), y + 4, 9, colors[1]);
 		_menu.drawString(_res.getMenuString(LocaleData::LI_20_LOAD_GAME), y + 6, 9, colors[2]);
@@ -743,27 +743,27 @@ bool Game::handleConfigPanel() {
 		_menu.drawString(buf, y + 10, 9, 1);
 
 		_vid.updateScreen();
-		_stub->sleep(80);
+		_engine->sleep(80);
 		inp_update();
 
 		int prev = current;
-		if (_stub->_pi.dirMask & PlayerInput::DIR_UP) {
-			_stub->_pi.dirMask &= ~PlayerInput::DIR_UP;
+		if (_engine->_pi.dirMask & PlayerInput::DIR_UP) {
+			_engine->_pi.dirMask &= ~PlayerInput::DIR_UP;
 			current = (current + 3) % 4;
 		}
-		if (_stub->_pi.dirMask & PlayerInput::DIR_DOWN) {
-			_stub->_pi.dirMask &= ~PlayerInput::DIR_DOWN;
+		if (_engine->_pi.dirMask & PlayerInput::DIR_DOWN) {
+			_engine->_pi.dirMask &= ~PlayerInput::DIR_DOWN;
 			current = (current + 1) % 4;
 		}
-		if (_stub->_pi.dirMask & PlayerInput::DIR_LEFT) {
-			_stub->_pi.dirMask &= ~PlayerInput::DIR_LEFT;
+		if (_engine->_pi.dirMask & PlayerInput::DIR_LEFT) {
+			_engine->_pi.dirMask &= ~PlayerInput::DIR_LEFT;
 			--_stateSlot;
 			if (_stateSlot < 1) {
 				_stateSlot = 1;
 			}
 		}
-		if (_stub->_pi.dirMask & PlayerInput::DIR_RIGHT) {
-			_stub->_pi.dirMask &= ~PlayerInput::DIR_RIGHT;
+		if (_engine->_pi.dirMask & PlayerInput::DIR_RIGHT) {
+			_engine->_pi.dirMask &= ~PlayerInput::DIR_RIGHT;
 			++_stateSlot;
 			if (_stateSlot > 99) {
 				_stateSlot = 99;
@@ -772,20 +772,20 @@ bool Game::handleConfigPanel() {
 		if (prev != current) {
 			SWAP(colors[prev], colors[current]);
 		}
-		if (_stub->_pi.enter) {
-			_stub->_pi.enter = false;
+		if (_engine->_pi.enter) {
+			_engine->_pi.enter = false;
 			switch (current) {
 			case MENU_ITEM_LOAD:
-				_stub->_pi.load = true;
+				_engine->_pi.load = true;
 				break;
 			case MENU_ITEM_SAVE:
-				_stub->_pi.save = true;
+				_engine->_pi.save = true;
 				break;
 			}
 			break;
 		}
-		if (_stub->_pi.escape) {
-			_stub->_pi.escape = false;
+		if (_engine->_pi.escape) {
+			_engine->_pi.escape = false;
 			break;
 		}
 	}
@@ -794,8 +794,8 @@ bool Game::handleConfigPanel() {
 }
 
 bool Game::handleContinueAbort() {
-	if (_stub->hasWidescreen()) {
-		_stub->clearWidescreen();
+	if (_engine->hasWidescreen()) {
+		_engine->clearWidescreen();
 	}
 	playCutscene(0x48);
 	int timeout = 100;
@@ -803,9 +803,9 @@ bool Game::handleContinueAbort() {
 	uint8_t colors[] = { 0xE4, 0xE5 };
 	uint8_t color_inc = 0xFF;
 	Color col;
-	_stub->getPaletteEntry(0xE4, &col);
+	_engine->getPaletteEntry(0xE4, &col);
 	memcpy(_vid._tempLayer, _vid._frontLayer, _vid._layerSize);
-	while (timeout >= 0 && !_stub->_pi.quit) {
+	while (timeout >= 0 && !_engine->_pi.quit) {
 		const char *str;
 		str = _res.getMenuString(LocaleData::LI_01_CONTINUE_OR_ABORT);
 		_vid.drawString(str, (Video::GAMESCREEN_W - strlen(str) * Video::CHAR_W) / 2, 64, 0xE3);
@@ -819,26 +819,26 @@ bool Game::handleContinueAbort() {
 		_vid.drawString(str, (Video::GAMESCREEN_W - strlen(str) * Video::CHAR_W) / 2, 112, colors[1]);
 		snprintf(buf, sizeof(buf), "SCORE  %08u", _score);
 		_vid.drawString(buf, 64, 154, 0xE3);
-		if (_stub->_pi.dirMask & PlayerInput::DIR_UP) {
-			_stub->_pi.dirMask &= ~PlayerInput::DIR_UP;
+		if (_engine->_pi.dirMask & PlayerInput::DIR_UP) {
+			_engine->_pi.dirMask &= ~PlayerInput::DIR_UP;
 			if (current_color > 0) {
 				SWAP(colors[current_color], colors[current_color - 1]);
 				--current_color;
 			}
 		}
-		if (_stub->_pi.dirMask & PlayerInput::DIR_DOWN) {
-			_stub->_pi.dirMask &= ~PlayerInput::DIR_DOWN;
+		if (_engine->_pi.dirMask & PlayerInput::DIR_DOWN) {
+			_engine->_pi.dirMask &= ~PlayerInput::DIR_DOWN;
 			if (current_color < 1) {
 				SWAP(colors[current_color], colors[current_color + 1]);
 				++current_color;
 			}
 		}
-		if (_stub->_pi.enter) {
-			_stub->_pi.enter = false;
+		if (_engine->_pi.enter) {
+			_engine->_pi.enter = false;
 			return (current_color == 0);
 		}
-		_stub->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
-		_stub->updateScreen(0);
+		_engine->copyRect(0, 0, _vid._w, _vid._h, _vid._frontLayer, _vid._w);
+		_engine->updateScreen(0);
 		static const int COLOR_STEP = 8;
 		static const int COLOR_MIN = 16;
 		static const int COLOR_MAX = 256 - 16;
@@ -854,9 +854,9 @@ bool Game::handleContinueAbort() {
 			col.b -= COLOR_STEP;
 			col.g -= COLOR_STEP;
 		}
-		_stub->setPaletteEntry(0xE4, &col);
-		_stub->processEvents();
-		_stub->sleep(100);
+		_engine->setPaletteEntry(0xE4, &col);
+		_engine->processEvents();
+		_engine->sleep(100);
 		--timeout;
 		memcpy(_vid._frontLayer, _vid._tempLayer, _vid._layerSize);
 	}
@@ -922,7 +922,7 @@ void Game::drawStoryTexts() {
 		memcpy(_vid._tempLayer, _vid._frontLayer, _vid._layerSize);
 		int textSpeechSegment = 0;
 		int textSegmentsCount = 0;
-		while (!_stub->_pi.quit) {
+		while (!_engine->_pi.quit) {
 			drawIcon(_currentInventoryIconNum, 80, 8, 0xA);
 			int yPos = 26;
 			if (_res._type == kResourceTypeMac) {
@@ -996,18 +996,18 @@ void Game::drawStoryTexts() {
 				_mix.play(voiceSegmentData, voiceSegmentLen, 32000, Mixer::MAX_VOLUME);
 			}
 			_vid.updateScreen();
-			while (!_stub->_pi.backspace && !_stub->_pi.quit) {
+			while (!_engine->_pi.backspace && !_engine->_pi.quit) {
 				if (voiceSegmentData && !_mix.isPlaying(voiceSegmentData)) {
 					break;
 				}
 				inp_update();
-				_stub->sleep(80);
+				_engine->sleep(80);
 			}
 			if (voiceSegmentData) {
 				_mix.stopAll();
 				free(voiceSegmentData);
 			}
-			_stub->_pi.backspace = false;
+			_engine->_pi.backspace = false;
 			if (_res._type == kResourceTypeMac) {
 				if (textSpeechSegment == textSegmentsCount) {
 					break;
@@ -1532,7 +1532,7 @@ int Game::loadMonsterSprites(LivePGE *pge) {
 				static const int kMonsterPalette = 5;
 				for (int i = 0; i < 16; ++i) {
 					const int color = kMonsterPalette * 16 + i;
-					_stub->setPaletteEntry(color, &palette[color]);
+					_engine->setPaletteEntry(color, &palette[color]);
 				}
 			}
 			break;
@@ -1585,7 +1585,7 @@ void Game::loadLevelMap() {
 		_vid.AMIGA_decodeLev(_currentLevel, _currentRoom);
 		break;
 	case kResourceTypeDOS:
-		if (_stub->hasWidescreen() && (_widescreenMode == kWidescreenAdjacentRooms || _widescreenMode == kWidescreenAdjacentRoomsBlur)) {
+		if (_engine->hasWidescreen() && (_widescreenMode == kWidescreenAdjacentRooms || _widescreenMode == kWidescreenAdjacentRoomsBlur)) {
 			const int leftRoom = _res._ctData[CT_LEFT_ROOM + _currentRoom];
 			if (
 				leftRoom >= 0 && hasLevelMap(_currentLevel, leftRoom) &&
@@ -1593,9 +1593,9 @@ void Game::loadLevelMap() {
 				!(_currentLevel == 1 && (leftRoom == 0 || leftRoom == 13 || leftRoom == 38 || leftRoom == 51))
 			) {
 				_vid.PC_decodeMap(_currentLevel, leftRoom);
-				_stub->copyWidescreenLeft(Video::GAMESCREEN_W, Video::GAMESCREEN_H, _vid._backLayer, _widescreenMode == kWidescreenAdjacentRooms);
+				_engine->copyWidescreenLeft(Video::GAMESCREEN_W, Video::GAMESCREEN_H, _vid._backLayer, _widescreenMode == kWidescreenAdjacentRooms);
 			} else {
-				_stub->copyWidescreenLeft(Video::GAMESCREEN_W, Video::GAMESCREEN_H, 0);
+				_engine->copyWidescreenLeft(Video::GAMESCREEN_W, Video::GAMESCREEN_H, 0);
 			}
 			const int rightRoom = _res._ctData[CT_RIGHT_ROOM + _currentRoom];
 			if (
@@ -1604,16 +1604,16 @@ void Game::loadLevelMap() {
 				!(_currentLevel == 1 && (rightRoom == 0 || rightRoom == 13 || rightRoom == 38 || rightRoom == 51))
 			) {
 				_vid.PC_decodeMap(_currentLevel, rightRoom);
-				_stub->copyWidescreenRight(Video::GAMESCREEN_W, Video::GAMESCREEN_H, _vid._backLayer, _widescreenMode == kWidescreenAdjacentRooms);
+				_engine->copyWidescreenRight(Video::GAMESCREEN_W, Video::GAMESCREEN_H, _vid._backLayer, _widescreenMode == kWidescreenAdjacentRooms);
 			} else {
-				_stub->copyWidescreenRight(Video::GAMESCREEN_W, Video::GAMESCREEN_H, 0);
+				_engine->copyWidescreenRight(Video::GAMESCREEN_W, Video::GAMESCREEN_H, 0);
 			}
 			widescreenUpdated = true;
 		}
 		_vid.PC_decodeMap(_currentLevel, _currentRoom);
 		break;
 	case kResourceTypeMac:
-		if (_stub->hasWidescreen() && (_widescreenMode == kWidescreenAdjacentRooms || _widescreenMode == kWidescreenAdjacentRoomsBlur)) {
+		if (_engine->hasWidescreen() && (_widescreenMode == kWidescreenAdjacentRooms || _widescreenMode == kWidescreenAdjacentRoomsBlur)) {
 			const int leftRoom = _res._ctData[CT_LEFT_ROOM + _currentRoom];
 			if (
 				leftRoom > 0 && hasLevelMap(_currentLevel, leftRoom) &&
@@ -1621,9 +1621,9 @@ void Game::loadLevelMap() {
 				!(_currentLevel == 1 && (leftRoom == 0 || leftRoom == 13 || leftRoom == 38 || leftRoom == 51))
 			) {
 				_vid.MAC_decodeMap(_currentLevel, leftRoom);
-				_stub->copyWidescreenLeft(_vid._w, _vid._h, _vid._backLayer, _widescreenMode == kWidescreenAdjacentRooms);
+				_engine->copyWidescreenLeft(_vid._w, _vid._h, _vid._backLayer, _widescreenMode == kWidescreenAdjacentRooms);
 			} else {
-				_stub->copyWidescreenLeft(_vid._w, _vid._h, 0);
+				_engine->copyWidescreenLeft(_vid._w, _vid._h, 0);
 			}
 			const int rightRoom = _res._ctData[CT_RIGHT_ROOM + _currentRoom];
 			if (
@@ -1632,9 +1632,9 @@ void Game::loadLevelMap() {
 				!(_currentLevel == 1 && (leftRoom == 0 || leftRoom == 13 || leftRoom == 38 || leftRoom == 51))
 			) {
 				_vid.MAC_decodeMap(_currentLevel, rightRoom);
-				_stub->copyWidescreenRight(_vid._w, _vid._h, _vid._backLayer, _widescreenMode == kWidescreenAdjacentRooms);
+				_engine->copyWidescreenRight(_vid._w, _vid._h, _vid._backLayer, _widescreenMode == kWidescreenAdjacentRooms);
 			} else {
-				_stub->copyWidescreenRight(_vid._w, _vid._h, 0);
+				_engine->copyWidescreenRight(_vid._w, _vid._h, 0);
 			}
 			widescreenUpdated = true;
 		}
@@ -1889,7 +1889,7 @@ void Game::handleInventory() {
 		int num_lines = (num_items - 1) / 4 + 1;
 		int current_line = 0;
 		bool display_score = false;
-		while (!_stub->_pi.backspace && !_stub->_pi.quit) {
+		while (!_engine->_pi.backspace && !_engine->_pi.quit) {
 			static const int icon_spr_w = 16;
 			static const int icon_spr_h = 16;
 			switch (_res._type) {
@@ -1958,25 +1958,25 @@ void Game::handleInventory() {
 			}
 
 			_vid.updateScreen();
-			_stub->sleep(80);
+			_engine->sleep(80);
 			inp_update();
 
-			if (_stub->_pi.dirMask & PlayerInput::DIR_UP) {
-				_stub->_pi.dirMask &= ~PlayerInput::DIR_UP;
+			if (_engine->_pi.dirMask & PlayerInput::DIR_UP) {
+				_engine->_pi.dirMask &= ~PlayerInput::DIR_UP;
 				if (current_line < num_lines - 1) {
 					++current_line;
 					current_item = current_line * 4;
 				}
 			}
-			if (_stub->_pi.dirMask & PlayerInput::DIR_DOWN) {
-				_stub->_pi.dirMask &= ~PlayerInput::DIR_DOWN;
+			if (_engine->_pi.dirMask & PlayerInput::DIR_DOWN) {
+				_engine->_pi.dirMask &= ~PlayerInput::DIR_DOWN;
 				if (current_line > 0) {
 					--current_line;
 					current_item = current_line * 4;
 				}
 			}
-			if (_stub->_pi.dirMask & PlayerInput::DIR_LEFT) {
-				_stub->_pi.dirMask &= ~PlayerInput::DIR_LEFT;
+			if (_engine->_pi.dirMask & PlayerInput::DIR_LEFT) {
+				_engine->_pi.dirMask &= ~PlayerInput::DIR_LEFT;
 				if (current_item > 0) {
 					int item_num = current_item % 4;
 					if (item_num > 0) {
@@ -1984,8 +1984,8 @@ void Game::handleInventory() {
 					}
 				}
 			}
-			if (_stub->_pi.dirMask & PlayerInput::DIR_RIGHT) {
-				_stub->_pi.dirMask &= ~PlayerInput::DIR_RIGHT;
+			if (_engine->_pi.dirMask & PlayerInput::DIR_RIGHT) {
+				_engine->_pi.dirMask &= ~PlayerInput::DIR_RIGHT;
 				if (current_item < num_items - 1) {
 					int item_num = current_item % 4;
 					if (item_num < 3) {
@@ -1993,13 +1993,13 @@ void Game::handleInventory() {
 					}
 				}
 			}
-			if (_stub->_pi.enter) {
-				_stub->_pi.enter = false;
+			if (_engine->_pi.enter) {
+				_engine->_pi.enter = false;
 				display_score = !display_score;
 			}
 		}
 		_vid.fullRefresh();
-		_stub->_pi.backspace = false;
+		_engine->_pi.backspace = false;
 		if (selected_pge) {
 			pge_setCurrentInventoryObject(selected_pge);
 		}
@@ -2008,14 +2008,14 @@ void Game::handleInventory() {
 }
 
 void Game::inp_update() {
-	_stub->processEvents();
+	_engine->processEvents();
 	if (_demoBin != -1 && _inp_demPos < _res._demLen) {
 		const int keymask = _res._dem[_inp_demPos++];
-		_stub->_pi.dirMask = keymask & 0xF;
-		_stub->_pi.enter = (keymask & 0x10) != 0;
-		_stub->_pi.space = (keymask & 0x20) != 0;
-		_stub->_pi.shift = (keymask & 0x40) != 0;
-		_stub->_pi.backspace = (keymask & 0x80) != 0;
+		_engine->_pi.dirMask = keymask & 0xF;
+		_engine->_pi.enter = (keymask & 0x10) != 0;
+		_engine->_pi.space = (keymask & 0x20) != 0;
+		_engine->_pi.shift = (keymask & 0x40) != 0;
+		_engine->_pi.backspace = (keymask & 0x80) != 0;
 	}
 }
 

@@ -5,11 +5,11 @@
  */
 
 #include "mixer.h"
-#include "systemstub.h"
+#include "engine.h"
 #include "util.h"
 
-Mixer::Mixer(FileSystem *fs, SystemStub *stub)
-	: _stub(stub), _musicType(MT_NONE), _cpc(this, fs), _mod(this, fs), _ogg(this, fs), _sfx(this) {
+Mixer::Mixer(FileSystem *fs, Engine *engine)
+	: _engine(engine), _musicType(MT_NONE), _cpc(this, fs), _mod(this, fs), _ogg(this, fs), _sfx(this) {
 	_musicTrack = -1;
 	_backgroundMusicType = MT_NONE;
 }
@@ -17,25 +17,25 @@ Mixer::Mixer(FileSystem *fs, SystemStub *stub)
 void Mixer::init() {
 	memset(_channels, 0, sizeof(_channels));
 	_premixHook = 0;
-	_stub->startAudio(Mixer::mixCallback, this);
+	_engine->startAudio(Mixer::mixCallback, this);
 }
 
 void Mixer::free() {
 	setPremixHook(0, 0);
 	stopAll();
-	_stub->stopAudio();
+	_engine->stopAudio();
 }
 
 void Mixer::setPremixHook(PremixHook premixHook, void *userData) {
 	debug(DBG_SND, "Mixer::setPremixHook()");
-	LockAudioStack las(_stub);
+	LockAudioStack las(_engine);
 	_premixHook = premixHook;
 	_premixHookData = userData;
 }
 
 void Mixer::play(const uint8_t *data, uint32_t len, uint16_t freq, uint8_t volume) {
 	debug(DBG_SND, "Mixer::play(%d, %d)", freq, volume);
-	LockAudioStack las(_stub);
+	LockAudioStack las(_engine);
 	MixerChannel *ch = 0;
 	for (int i = 0; i < NUM_CHANNELS; ++i) {
 		MixerChannel *cur = &_channels[i];
@@ -55,13 +55,13 @@ void Mixer::play(const uint8_t *data, uint32_t len, uint16_t freq, uint8_t volum
 		ch->chunk.data = data;
 		ch->chunk.len = len;
 		ch->chunkPos = 0;
-		ch->chunkInc = (freq << FRAC_BITS) / _stub->getOutputSampleRate();
+		ch->chunkInc = (freq << FRAC_BITS) / _engine->getOutputSampleRate();
 	}
 }
 
 bool Mixer::isPlaying(const uint8_t *data) const {
 	debug(DBG_SND, "Mixer::isPlaying");
-	LockAudioStack las(_stub);
+	LockAudioStack las(_engine);
 	for (int i = 0; i < NUM_CHANNELS; ++i) {
 		const MixerChannel *ch = &_channels[i];
 		if (ch->active && ch->chunk.data == data) {
@@ -72,12 +72,12 @@ bool Mixer::isPlaying(const uint8_t *data) const {
 }
 
 uint32_t Mixer::getSampleRate() const {
-	return _stub->getOutputSampleRate();
+	return _engine->getOutputSampleRate();
 }
 
 void Mixer::stopAll() {
 	debug(DBG_SND, "Mixer::stopAll()");
-	LockAudioStack las(_stub);
+	LockAudioStack las(_engine);
 	for (uint8_t i = 0; i < NUM_CHANNELS; ++i) {
 		_channels[i].active = false;
 	}

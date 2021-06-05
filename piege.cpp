@@ -7,7 +7,7 @@
 #include "cutscene.h"
 #include "game.h"
 #include "resource.h"
-#include "systemstub.h"
+#include "engine.h"
 #include "util.h"
 
 void Game::pge_resetGroups() {
@@ -496,7 +496,7 @@ void Game::pge_addToCurrentRoomList(LivePGE *pge, uint8_t room) {
 
 void Game::pge_getInput() {
 	inp_update();
-	_inp_lastKeysHit = _stub->_pi.dirMask;
+	_inp_lastKeysHit = _engine->_pi.dirMask;
 	if ((_inp_lastKeysHit & 0xC) && (_inp_lastKeysHit & 0x3)) {
 		const uint8_t mask = (_inp_lastKeysHit & 0xF0) | (_inp_lastKeysHitLeftRight & 0xF);
 		_pge_inpKeysMask = mask;
@@ -505,13 +505,13 @@ void Game::pge_getInput() {
 		_pge_inpKeysMask = _inp_lastKeysHit;
 		_inp_lastKeysHitLeftRight = _inp_lastKeysHit;
 	}
-	if (_stub->_pi.enter) {
+	if (_engine->_pi.enter) {
 		_pge_inpKeysMask |= 0x10;
 	}
-	if (_stub->_pi.space) {
+	if (_engine->_pi.space) {
 		_pge_inpKeysMask |= 0x20;
 	}
-	if (_stub->_pi.shift) {
+	if (_engine->_pi.shift) {
 		_pge_inpKeysMask |= 0x40;
 	}
 }

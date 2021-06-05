@@ -6,13 +6,13 @@
 
 #include "decode_mac.h"
 #include "resource.h"
-#include "systemstub.h"
+#include "engine.h"
 #include "unpack.h"
 #include "util.h"
 #include "video.h"
 
-Video::Video(Resource *res, SystemStub *stub, WidescreenMode widescreenMode)
-	: _res(res), _stub(stub), _widescreenMode(widescreenMode) {
+Video::Video(Resource *res, Engine *engine, WidescreenMode widescreenMode)
+	: _res(res), _engine(engine), _widescreenMode(widescreenMode) {
 	_layerScale = (_res->_type == kResourceTypeMac) ? 2 : 1; // Macintosh version is 512x448
 	_w = GAMESCREEN_W * _layerScale;
 	_h = GAMESCREEN_H * _layerScale;
@@ -78,8 +78,8 @@ void Video::updateScreen() {
 	debug(DBG_VIDEO, "Video::updateScreen()");
 //	_fullRefresh = true;
 	if (_fullRefresh) {
-		_stub->copyRect(0, 0, _w, _h, _frontLayer, _w);
-		_stub->updateScreen(_shakeOffset);
+		_engine->copyRect(0, 0, _w, _h, _frontLayer, _w);
+		_engine->updateScreen(_shakeOffset);
 		_fullRefresh = false;
 	} else {
 		int i, j;
@@ -93,20 +93,20 @@ void Video::updateScreen() {
 					++nh;
 				} else if (nh != 0) {
 					int16_t x = (i - nh) * SCREENBLOCK_W;
-					_stub->copyRect(x, j * SCREENBLOCK_H, nh * SCREENBLOCK_W, SCREENBLOCK_H, _frontLayer, _w);
+					_engine->copyRect(x, j * SCREENBLOCK_H, nh * SCREENBLOCK_W, SCREENBLOCK_H, _frontLayer, _w);
 					nh = 0;
 					++count;
 				}
 			}
 			if (nh != 0) {
 				int16_t x = (i - nh) * SCREENBLOCK_W;
-				_stub->copyRect(x, j * SCREENBLOCK_H, nh * SCREENBLOCK_W, SCREENBLOCK_H, _frontLayer, _w);
+				_engine->copyRect(x, j * SCREENBLOCK_H, nh * SCREENBLOCK_W, SCREENBLOCK_H, _frontLayer, _w);
 				++count;
 			}
 			p += _w / SCREENBLOCK_W;
 		}
 		if (count != 0) {
-			_stub->updateScreen(_shakeOffset);
+			_engine->updateScreen(_shakeOffset);
 		}
 	}
 	if (_shakeOffset != 0) {
@@ -116,13 +116,13 @@ void Video::updateScreen() {
 }
 
 void Video::updateWidescreen() {
-	if (_stub->hasWidescreen()) {
+	if (_engine->hasWidescreen()) {
 		if (_widescreenMode == kWidescreenMirrorRoom) {
-			_stub->copyWidescreenMirror(_w, _h, _backLayer);
+			_engine->copyWidescreenMirror(_w, _h, _backLayer);
 		} else if (_widescreenMode == kWidescreenBlur) {
-			_stub->copyWidescreenBlur(_w, _h, _backLayer);
+			_engine->copyWidescreenBlur(_w, _h, _backLayer);
 		} else {
-			_stub->clearWidescreen();
+			_engine->clearWidescreen();
 		}
 	}
 }
@@ -138,7 +138,7 @@ void Video::fadeOut() {
 	if (g_options.fade_out_palette) {
 		fadeOutPalette();
 	} else {
-		_stub->fadeScreen();
+		_engine->fadeScreen();
 	}
 }
 
@@ -146,22 +146,22 @@ void Video::fadeOutPalette() {
 	for (int step = 16; step >= 0; --step) {
 		for (int c = 0; c < 256; ++c) {
 			Color col;
-			_stub->getPaletteEntry(c, &col);
+			_engine->getPaletteEntry(c, &col);
 			col.r = col.r * step >> 4;
 			col.g = col.g * step >> 4;
 			col.b = col.b * step >> 4;
-			_stub->setPaletteEntry(c, &col);
+			_engine->setPaletteEntry(c, &col);
 		}
 		fullRefresh();
 		updateScreen();
-		_stub->sleep(50);
+		_engine->sleep(50);
 	}
 }
 
 void Video::setPaletteColorBE(int num, int offset) {
 	const int color = READ_BE_UINT16(_res->_pal + offset * 2);
 	Color c = AMIGA_convertColor(color, true);
-	_stub->setPaletteEntry(num, &c);
+	_engine->setPaletteEntry(num, &c);
 }
 
 void Video::setPaletteSlotBE(int palSlot, int palNum) {
@@ -170,7 +170,7 @@ void Video::setPaletteSlotBE(int palSlot, int palNum) {
 	for (int i = 0; i < 16; ++i) {
 		const int color = READ_BE_UINT16(p); p += 2;
 		Color c = AMIGA_convertColor(color, true);
-		_stub->setPaletteEntry(palSlot * 16 + i, &c);
+		_engine->setPaletteEntry(palSlot * 16 + i, &c);
 	}
 }
 
@@ -179,7 +179,7 @@ void Video::setPaletteSlotLE(int palSlot, const uint8_t *palData) {
 	for (int i = 0; i < 16; ++i) {
 		const uint16_t color = READ_LE_UINT16(palData + i * 2);
 		Color c = AMIGA_convertColor(color);
-		_stub->setPaletteEntry(palSlot * 16 + i, &c);
+		_engine->setPaletteEntry(palSlot * 16 + i, &c);
 	}
 	if (palSlot == 4 && (g_options.use_white_tshirt || g_options.use_wrike_tshirt)) {
 		Color color12, color13;
@@ -190,8 +190,8 @@ void Video::setPaletteSlotLE(int palSlot, const uint8_t *palData) {
 			color12 = AMIGA_convertColor(0x888);
 			color13 = AMIGA_convertColor((palData == _conradPal2) ? 0x888 : 0xCCC);
 		}
-		_stub->setPaletteEntry(palSlot * 16 + 12, &color12);
-		_stub->setPaletteEntry(palSlot * 16 + 13, &color13);
+		_engine->setPaletteEntry(palSlot * 16 + 12, &color12);
+		_engine->setPaletteEntry(palSlot * 16 + 13, &color13);
 	}
 }
 
@@ -202,7 +202,7 @@ void Video::setTextPalette() {
 		Color c;
 		c.r = c.g = 0xEE;
 		c.b = 0;
-		_stub->setPaletteEntry(0xE7, &c);
+		_engine->setPaletteEntry(0xE7, &c);
 	}
 }
 
@@ -214,7 +214,7 @@ void Video::setPalette0xF() {
 		c.r = *p++;
 		c.g = *p++;
 		c.b = *p++;
-		_stub->setPaletteEntry(0xF0 + i, &c);
+		_engine->setPaletteEntry(0xF0 + i, &c);
 	}
 }
 
@@ -1025,7 +1025,7 @@ void Video::MAC_decodeMap(int level, int room) {
 		}
 		for (int i = 0; i < 16; ++i) {
 			const int color = j * 16 + i;
-			_stub->setPaletteEntry(color, &roomPalette[color]);
+			_engine->setPaletteEntry(color, &roomPalette[color]);
 		}
 	}
 }

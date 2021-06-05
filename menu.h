@@ -10,7 +10,7 @@
 #include "intern.h"
 
 struct Resource;
-struct SystemStub;
+struct Engine;
 struct Video;
 
 struct Menu {
@@ -64,7 +64,7 @@ struct Menu {
 	static const uint8_t _flagSp16x12[];
 
 	Resource *_res;
-	SystemStub *_stub;
+	Engine *_engine;
 	Video *_vid;
 
 	int _currentScreen;
@@ -80,7 +80,7 @@ struct Menu {
 	uint8_t _charVar4;
 	uint8_t _charVar5;
 
-	Menu(Resource *res, SystemStub *stub, Video *vid);
+	Menu(Resource *res, Engine *engine, Video *vid);
 
 	void drawString(const char *str, int16_t y, int16_t x, uint8_t color);
 	void drawString2(const char *str, int16_t y, int16_t x);

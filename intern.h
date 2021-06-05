@@ -126,6 +126,7 @@ struct Options {
 	bool bypass_protection;
 	bool enable_password_menu;
 	bool enable_language_selection;
+	bool enable_gpu_engine;
 	bool fade_out_palette;
 	bool use_tile_data;
 	bool use_text_cutscenes;

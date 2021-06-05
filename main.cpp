@@ -12,7 +12,7 @@
 #include "fs.h"
 #include "game.h"
 #include "scaler.h"
-#include "systemstub.h"
+#include "engine.h"
 #include "util.h"
 
 static const char *USAGE =
@@ -90,6 +90,7 @@ static void initOptions() {
 	g_options.bypass_protection = true;
 	g_options.enable_password_menu = true;
 	g_options.enable_language_selection = false;
+	g_options.enable_gpu_engine = false;
 	g_options.fade_out_palette = true;
 	g_options.use_text_cutscenes = false;
 	g_options.use_seq_cutscenes = true;
@@ -110,6 +111,7 @@ static void initOptions() {
 		{ "bypass_protection", &g_options.bypass_protection },
 		{ "enable_password_menu", &g_options.enable_password_menu },
 		{ "enable_language_selection", &g_options.enable_language_selection },
+		{ "enable_gpu_engine", &g_options.enable_gpu_engine },
 		{ "fade_out_palette", &g_options.fade_out_palette },
 		{ "use_tile_data", &g_options.use_tile_data },
 		{ "use_text_cutscenes", &g_options.use_text_cutscenes },
@@ -283,7 +285,7 @@ int main(int argc, char *argv[]) {
 	if (useWrikeTShirt) {
 		g_options.use_wrike_tshirt = true;
 	}
-	g_debugMask = DBG_INFO; // | DBG_MOD | DBG_SFX | DBG_SND | DBG_FILE | DBG_CUT | DBG_VIDEO | DBG_RES | DBG_MENU | DBG_PGE | DBG_GAME | DBG_UNPACK | DBG_COL
+	g_debugMask = DBG_INFO; // | DBG_MOD | DBG_SFX | DBG_SND | DBG_FILE | DBG_CUT | DBG_VIDEO | DBG_RES | DBG_MENU | DBG_PGE | DBG_GAME | DBG_UNPACK | DBG_COL;
 	FileSystem fs(dataPath);
 	FileSystem tune_fs(tunePath);
 	const int version = detectVersion(&fs);
@@ -292,12 +294,12 @@ int main(int argc, char *argv[]) {
 		return -1;
 	}
 	const Language language = (forcedLanguage == -1) ? detectLanguage(&fs) : (Language)forcedLanguage;
-	SystemStub *stub = SystemStub_GPU_create();
-	Game *g = new Game(stub, &fs, &tune_fs, savePath, levelNum, (ResourceType)version, language, widescreen, autoSave);
-	stub->init(g_caption, g->_vid._w, g->_vid._h, fullscreen, widescreen, &scalerParameters);
+	Engine *engine = g_options.enable_gpu_engine ? Engine_GPU_create() : Engine_SDL_create();
+	Game *g = new Game(engine, &fs, &tune_fs, savePath, levelNum, (ResourceType)version, language, widescreen, autoSave);
+	engine->init(g_caption, g->_vid._w, g->_vid._h, fullscreen, widescreen, &scalerParameters);
 	g->run();
 	delete g;
-	stub->destroy();
-	delete stub;
+	engine->destroy();
+	delete engine;
 	return 0;
 }

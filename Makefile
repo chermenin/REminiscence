@@ -19,7 +19,7 @@ CXXFLAGS += -std=c++17 -Wall -Wpedantic -Woverlength-strings -MMD $(SDL_CFLAGS) 
 SRCS = collision.cpp cpc_player.cpp cutscene.cpp decode_mac.cpp file.cpp fs.cpp game.cpp graphics.cpp main.cpp \
 	menu.cpp mixer.cpp mod_player.cpp ogg_player.cpp piege.cpp protection.cpp resource.cpp resource_aba.cpp \
 	resource_mac.cpp scaler.cpp screenshot.cpp seq_player.cpp sfx_player.cpp staticres.cpp staticres_controllers.cpp \
-	systemstub.cpp systemstub_sdl.cpp systemstub_gpu.cpp unpack.cpp util.cpp video.cpp xbrz.cpp
+	engine.cpp engine_sdl.cpp engine_gpu.cpp unpack.cpp util.cpp video.cpp xbrz.cpp
 
 
 OBJS = $(SRCS:.cpp=.o) $(SCALERS:.cpp=.o)

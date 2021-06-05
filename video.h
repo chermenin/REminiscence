@@ -10,7 +10,7 @@
 #include "intern.h"
 
 struct Resource;
-struct SystemStub;
+struct Engine;
 
 struct Video {
 	typedef void (Video::*drawCharFunc)(uint8_t *, int, int, int, const uint8_t *, uint8_t, uint8_t);
@@ -31,7 +31,7 @@ struct Video {
 	static const uint8_t _font8Jp[];
 
 	Resource *_res;
-	SystemStub *_stub;
+	Engine *_engine;
 	WidescreenMode _widescreenMode;
 
 	int _w, _h;
@@ -51,7 +51,7 @@ struct Video {
 	uint8_t _shakeOffset;
 	drawCharFunc _drawChar;
 
-	Video(Resource *res, SystemStub *stub, WidescreenMode widescreenMode);
+	Video(Resource *res, Engine *engine, WidescreenMode widescreenMode);
 	~Video();
 
 	void markBlockAsDirty(int16_t x, int16_t y, uint16_t w, uint16_t h, int scale);

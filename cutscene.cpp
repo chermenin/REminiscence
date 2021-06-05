@@ -7,7 +7,7 @@
 #include <math.h>
 #include "cutscene.h"
 #include "resource.h"
-#include "systemstub.h"
+#include "engine.h"
 #include "util.h"
 #include "video.h"
 
@@ -21,8 +21,8 @@ static void scalePoints(Point *pt, int count, int scale) {
 	}
 }
 
-Cutscene::Cutscene(Resource *res, SystemStub *stub, Video *vid)
-	: _res(res), _stub(stub), _vid(vid) {
+Cutscene::Cutscene(Resource *res, Engine *engine, Video *vid)
+	: _res(res), _engine(engine), _vid(vid) {
 	_patchedOffsetsTable = 0;
 	memset(_palBuf, 0, sizeof(_palBuf));
 }
@@ -36,18 +36,18 @@ const uint8_t *Cutscene::getPolygonData() const {
 }
 
 void Cutscene::sync() {
-	if (_stub->_pi.quit) {
+	if (_engine->_pi.quit) {
 		return;
 	}
-	if (_stub->_pi.dbgMask & PlayerInput::DF_FASTMODE) {
+	if (_engine->_pi.dbgMask & PlayerInput::DF_FASTMODE) {
 		return;
 	}
-	const int32_t delay = _stub->getTimeStamp() - _tstamp;
+	const int32_t delay = _engine->getTimeStamp() - _tstamp;
 	const int32_t pause = _frameDelay * TIMER_SLICE - delay;
 	if (pause > 0) {
-		_stub->sleep(pause);
+		_engine->sleep(pause);
 	}
-	_tstamp = _stub->getTimeStamp();
+	_tstamp = _engine->getTimeStamp();
 }
 
 void Cutscene::copyPalette(const uint8_t *pal, uint16_t num) {
@@ -65,7 +65,7 @@ void Cutscene::updatePalette() {
 		for (int i = 0; i < 32; ++i) {
 			const uint16_t color = READ_BE_UINT16(p); p += 2;
 			Color c = Video::AMIGA_convertColor(color);
-			_stub->setPaletteEntry(0xC0 + i, &c);
+			_engine->setPaletteEntry(0xC0 + i, &c);
 		}
 		_newPal = false;
 	}
@@ -75,8 +75,8 @@ void Cutscene::setPalette() {
 	sync();
 	updatePalette();
 	SWAP(_page0, _page1);
-	_stub->copyRect(0, 0, _vid->_w, _vid->_h, _page0, _vid->_w);
-	_stub->updateScreen(0);
+	_engine->copyRect(0, 0, _vid->_w, _vid->_h, _page0, _vid->_w);
+	_engine->updateScreen(0);
 }
 
 #if 0
@@ -890,10 +890,10 @@ void Cutscene::op_drawStringAtPos() {
 			// 'voyage' - cutscene script redraws the string to refresh the screen
 			if (_id == 0x34 && (strId & 0xFFF) == 0x45) {
 				if ((_cmdPtr - _cmdPtrBak) == 0xA) {
-					_stub->copyRect(0, 0, _vid->_w, _vid->_h, _page1, _vid->_w);
-					_stub->updateScreen(0);
+					_engine->copyRect(0, 0, _vid->_w, _vid->_h, _page1, _vid->_w);
+					_engine->updateScreen(0);
 				} else {
-					_stub->sleep(15);
+					_engine->sleep(15);
 				}
 			}
 		}
@@ -910,19 +910,19 @@ void Cutscene::op_handleKeys() {
 		bool b = true;
 		switch (key_mask) {
 		case 1:
-			b = (_stub->_pi.dirMask & PlayerInput::DIR_UP) != 0;
+			b = (_engine->_pi.dirMask & PlayerInput::DIR_UP) != 0;
 			break;
 		case 2:
-			b = (_stub->_pi.dirMask & PlayerInput::DIR_DOWN) != 0;
+			b = (_engine->_pi.dirMask & PlayerInput::DIR_DOWN) != 0;
 			break;
 		case 4:
-			b = (_stub->_pi.dirMask & PlayerInput::DIR_LEFT) != 0;
+			b = (_engine->_pi.dirMask & PlayerInput::DIR_LEFT) != 0;
 			break;
 		case 8:
-			b = (_stub->_pi.dirMask & PlayerInput::DIR_RIGHT) != 0;
+			b = (_engine->_pi.dirMask & PlayerInput::DIR_RIGHT) != 0;
 			break;
 		case 0x80:
-			b = _stub->_pi.space || _stub->_pi.enter || _stub->_pi.shift;
+			b = _engine->_pi.space || _engine->_pi.enter || _engine->_pi.shift;
 			break;
 		}
 		if (b) {
@@ -930,10 +930,10 @@ void Cutscene::op_handleKeys() {
 		}
 		_cmdPtr += 2;
 	}
-	_stub->_pi.dirMask = 0;
-	_stub->_pi.enter = false;
-	_stub->_pi.space = false;
-	_stub->_pi.shift = false;
+	_engine->_pi.dirMask = 0;
+	_engine->_pi.enter = false;
+	_engine->_pi.space = false;
+	_engine->_pi.shift = false;
 	int16_t n = fetchNextCmdWord();
 	if (n < 0) {
 		n = -n - 1;
@@ -970,12 +970,12 @@ uint16_t Cutscene::fetchNextCmdWord() {
 
 void Cutscene::mainLoop(uint16_t num) {
 	_frameDelay = 5;
-	_tstamp = _stub->getTimeStamp();
+	_tstamp = _engine->getTimeStamp();
 
 	Color c;
 	c.r = c.g = c.b = 0;
 	for (int i = 0; i < 0x20; ++i) {
-		_stub->setPaletteEntry(0xC0 + i, &c);
+		_engine->setPaletteEntry(0xC0 + i, &c);
 	}
 	_newPal = false;
 	_hasAlphaColor = false;
@@ -995,7 +995,7 @@ void Cutscene::mainLoop(uint16_t num) {
 	_polPtr = getPolygonData();
 	debug(DBG_CUT, "_baseOffset = %d offset = %d", _baseOffset, offset);
 
-	while (!_stub->_pi.quit && !_interrupted && !_stop) {
+	while (!_engine->_pi.quit && !_interrupted && !_stop) {
 		uint8_t op = fetchNextCmdByte();
 		debug(DBG_CUT, "Cutscene::play() opcode = 0x%X (%d)", op, (op >> 2));
 		if (op & 0x80) {
@@ -1006,9 +1006,9 @@ void Cutscene::mainLoop(uint16_t num) {
 			error("Invalid cutscene opcode = 0x%02X", op);
 		}
 		(this->*_opcodeTable[op])();
-		_stub->processEvents();
-		if (_stub->_pi.backspace) {
-			_stub->_pi.backspace = false;
+		_engine->processEvents();
+		if (_engine->_pi.backspace) {
+			_engine->_pi.backspace = false;
 			_interrupted = true;
 		}
 	}
@@ -1074,10 +1074,10 @@ void Cutscene::prepare() {
 	_page0 = _vid->_frontLayer;
 	_page1 = _vid->_tempLayer;
 	_pageC = _vid->_tempLayer2;
-	_stub->_pi.dirMask = 0;
-	_stub->_pi.enter = false;
-	_stub->_pi.space = false;
-	_stub->_pi.shift = false;
+	_engine->_pi.dirMask = 0;
+	_engine->_pi.enter = false;
+	_engine->_pi.space = false;
+	_engine->_pi.shift = false;
 	_interrupted = false;
 	_stop = false;
 	const int w = 240;
@@ -1105,7 +1105,7 @@ void Cutscene::playCredits() {
 	_creditsTextCounter = 0;
 	_interrupted = false;
 	const uint16_t *cut_seq = _creditsCutSeq;
-	while (!_stub->_pi.quit && !_interrupted) {
+	while (!_engine->_pi.quit && !_interrupted) {
 		uint16_t cut_id = *cut_seq++;
 		if (cut_id == 0xFFFF) {
 			break;
@@ -1126,10 +1126,10 @@ void Cutscene::playText(const char *str) {
 	Color c;
 	// background
 	c.r = c.g = c.b = 0;
-	_stub->setPaletteEntry(0xC0, &c);
+	_engine->setPaletteEntry(0xC0, &c);
 	// text
 	c.r = c.g = c.b = 255;
-	_stub->setPaletteEntry(0xC1, &c);
+	_engine->setPaletteEntry(0xC1, &c);
 
 	int lines = 0;
 	for (int i = 0; str[i]; ++i) {
@@ -1140,16 +1140,16 @@ void Cutscene::playText(const char *str) {
 	const int y = (128 - lines * 8) / 2;
 	memset(_page1, 0xC0, _vid->_layerSize);
 	drawText(0, y, (const uint8_t *)str, 0xC1, _page1, kTextJustifyAlign);
-	_stub->copyRect(0, 0, _vid->_w, _vid->_h, _page1, _vid->_w);
-	_stub->updateScreen(0);
+	_engine->copyRect(0, 0, _vid->_w, _vid->_h, _page1, _vid->_w);
+	_engine->updateScreen(0);
 
-	while (!_stub->_pi.quit) {
-		_stub->processEvents();
-		if (_stub->_pi.backspace) {
-			_stub->_pi.backspace = false;
+	while (!_engine->_pi.quit) {
+		_engine->processEvents();
+		if (_engine->_pi.backspace) {
+			_engine->_pi.backspace = false;
 			break;
 		}
-		_stub->sleep(TIMER_SLICE);
+		_engine->sleep(TIMER_SLICE);
 	}
 }
 
@@ -1307,8 +1307,8 @@ void Cutscene::playSet(const uint8_t *p, int offset) {
 
 	offset = 10;
 	const int frames = READ_BE_UINT16(p + offset); offset += 2;
-	for (int i = 0; i < frames && !_stub->_pi.quit && !_interrupted; ++i) {
-		const uint32_t timestamp = _stub->getTimeStamp();
+	for (int i = 0; i < frames && !_engine->_pi.quit && !_interrupted; ++i) {
+		const uint32_t timestamp = _engine->getTimeStamp();
 
 		memset(_page1, 0xC0, _vid->_layerSize);
 
@@ -1354,16 +1354,16 @@ void Cutscene::playSet(const uint8_t *p, int offset) {
 
 		for (int j = 0; j < paletteLutSize; ++j) {
 			Color c = Video::AMIGA_convertColor(paletteBuffer[j]);
-			_stub->setPaletteEntry(0xC0 + j, &c);
+			_engine->setPaletteEntry(0xC0 + j, &c);
 		}
 
-		_stub->copyRect(0, 0, _vid->_w, _vid->_h, _page1, _vid->_w);
-		_stub->updateScreen(0);
-		const int diff = 6 * TIMER_SLICE - (_stub->getTimeStamp() - timestamp);
-		_stub->sleep((diff < 16) ? 16 : diff);
-		_stub->processEvents();
-		if (_stub->_pi.backspace) {
-			_stub->_pi.backspace = false;
+		_engine->copyRect(0, 0, _vid->_w, _vid->_h, _page1, _vid->_w);
+		_engine->updateScreen(0);
+		const int diff = 6 * TIMER_SLICE - (_engine->getTimeStamp() - timestamp);
+		_engine->sleep((diff < 16) ? 16 : diff);
+		_engine->processEvents();
+		if (_engine->_pi.backspace) {
+			_engine->_pi.backspace = false;
 			_interrupted = true;
 		}
 	}

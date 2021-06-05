@@ -7,12 +7,12 @@
 #include "game.h"
 #include "menu.h"
 #include "resource.h"
-#include "systemstub.h"
+#include "engine.h"
 #include "util.h"
 #include "video.h"
 
-Menu::Menu(Resource *res, SystemStub *stub, Video *vid)
-	: _res(res), _stub(stub), _vid(vid) {
+Menu::Menu(Resource *res, Engine *engine, Video *vid)
+	: _res(res), _engine(engine), _vid(vid) {
 	_skill = kSkillNormal;
 	_level = 0;
 }
@@ -101,7 +101,7 @@ void Menu::loadPicture(const char *prefix) {
 	}
 	memcpy(_vid->_backLayer, _vid->_frontLayer, _vid->_layerSize);
 	_res->load_PAL_menu(prefix, _res->_scratchBuffer);
-	_stub->setPalette(_res->_scratchBuffer, 256);
+	_engine->setPalette(_res->_scratchBuffer, 256);
 	_vid->updateWidescreen();
 }
 
@@ -116,17 +116,17 @@ void Menu::handleInfoScreen() {
 	_vid->fullRefresh();
 	_vid->updateScreen();
 	do {
-		_stub->sleep(EVENTS_DELAY);
-		_stub->processEvents();
-		if (_stub->_pi.escape) {
-			_stub->_pi.escape = false;
+		_engine->sleep(EVENTS_DELAY);
+		_engine->processEvents();
+		if (_engine->_pi.escape) {
+			_engine->_pi.escape = false;
 			break;
 		}
-		if (_stub->_pi.enter) {
-			_stub->_pi.enter = false;
+		if (_engine->_pi.enter) {
+			_engine->_pi.enter = false;
 			break;
 		}
-	} while (!_stub->_pi.quit);
+	} while (!_engine->_pi.quit);
 }
 
 void Menu::handleSkillScreen() {
@@ -147,11 +147,11 @@ void Menu::handleSkillScreen() {
 		drawString(_res->getMenuString(LocaleData::LI_15_EXPERT), 19, 14, colors[currentSkill][2]);
 
 		_vid->updateScreen();
-		_stub->sleep(EVENTS_DELAY);
-		_stub->processEvents();
+		_engine->sleep(EVENTS_DELAY);
+		_engine->processEvents();
 
-		if (_stub->_pi.dirMask & PlayerInput::DIR_UP) {
-			_stub->_pi.dirMask &= ~PlayerInput::DIR_UP;
+		if (_engine->_pi.dirMask & PlayerInput::DIR_UP) {
+			_engine->_pi.dirMask &= ~PlayerInput::DIR_UP;
 			switch (currentSkill) {
 			case kSkillNormal:
 				currentSkill = kSkillEasy;
@@ -161,8 +161,8 @@ void Menu::handleSkillScreen() {
 				break;
 			}
 		}
-		if (_stub->_pi.dirMask & PlayerInput::DIR_DOWN) {
-			_stub->_pi.dirMask &= ~PlayerInput::DIR_DOWN;
+		if (_engine->_pi.dirMask & PlayerInput::DIR_DOWN) {
+			_engine->_pi.dirMask &= ~PlayerInput::DIR_DOWN;
 			switch (currentSkill) {
 			case kSkillEasy:
 				currentSkill = kSkillNormal;
@@ -172,16 +172,16 @@ void Menu::handleSkillScreen() {
 				break;
 			}
 		}
-		if (_stub->_pi.escape) {
-			_stub->_pi.escape = false;
+		if (_engine->_pi.escape) {
+			_engine->_pi.escape = false;
 			break;
 		}
-		if (_stub->_pi.enter) {
-			_stub->_pi.enter = false;
+		if (_engine->_pi.enter) {
+			_engine->_pi.enter = false;
 			_skill = currentSkill;
 			return;
 		}
-	} while (!_stub->_pi.quit);
+	} while (!_engine->_pi.quit);
 	_skill = 1;
 }
 
@@ -206,11 +206,11 @@ bool Menu::handlePasswordScreen() {
 
 		_vid->markBlockAsDirty(15 * Video::CHAR_W, 21 * Video::CHAR_H, (len + 1) * Video::CHAR_W, Video::CHAR_H, _vid->_layerScale);
 		_vid->updateScreen();
-		_stub->sleep(EVENTS_DELAY);
-		_stub->processEvents();
-		char c = _stub->_pi.lastChar;
+		_engine->sleep(EVENTS_DELAY);
+		_engine->processEvents();
+		char c = _engine->_pi.lastChar;
 		if (c != 0) {
-			_stub->_pi.lastChar = 0;
+			_engine->_pi.lastChar = 0;
 			if (len < 6) {
 				if ((c >= 'A' && c <= 'Z') || (c == 0x20)) {
 					password[len] = c;
@@ -218,18 +218,18 @@ bool Menu::handlePasswordScreen() {
 				}
 			}
 		}
-		if (_stub->_pi.backspace) {
-			_stub->_pi.backspace = false;
+		if (_engine->_pi.backspace) {
+			_engine->_pi.backspace = false;
 			if (len > 0) {
 				--len;
 			}
 		}
-		if (_stub->_pi.escape) {
-			_stub->_pi.escape = false;
+		if (_engine->_pi.escape) {
+			_engine->_pi.escape = false;
 			break;
 		}
-		if (_stub->_pi.enter) {
-			_stub->_pi.enter = false;
+		if (_engine->_pi.enter) {
+			_engine->_pi.enter = false;
 			password[len] = '\0';
 			for (int level = 0; level < 8; ++level) {
 				for (int skill = 0; skill < 3; ++skill) {
@@ -242,7 +242,7 @@ bool Menu::handlePasswordScreen() {
 			}
 			return false;
 		}
-	} while (!_stub->_pi.quit);
+	} while (!_engine->_pi.quit);
 	return false;
 }
 
@@ -265,27 +265,27 @@ bool Menu::handleLevelScreen() {
 		_vid->markBlockAsDirty(4 * Video::CHAR_W, 23 * Video::CHAR_H, 192, Video::CHAR_H, _vid->_layerScale);
 
 		_vid->updateScreen();
-		_stub->sleep(EVENTS_DELAY);
-		_stub->processEvents();
+		_engine->sleep(EVENTS_DELAY);
+		_engine->processEvents();
 
-		if (_stub->_pi.dirMask & PlayerInput::DIR_UP) {
-			_stub->_pi.dirMask &= ~PlayerInput::DIR_UP;
+		if (_engine->_pi.dirMask & PlayerInput::DIR_UP) {
+			_engine->_pi.dirMask &= ~PlayerInput::DIR_UP;
 			if (currentLevel != 0) {
 				--currentLevel;
 			} else {
 				currentLevel = 6;
 			}
 		}
-		if (_stub->_pi.dirMask & PlayerInput::DIR_DOWN) {
-			_stub->_pi.dirMask &= ~PlayerInput::DIR_DOWN;
+		if (_engine->_pi.dirMask & PlayerInput::DIR_DOWN) {
+			_engine->_pi.dirMask &= ~PlayerInput::DIR_DOWN;
 			if (currentLevel != 6) {
 				++currentLevel;
 			} else {
 				currentLevel = 0;
 			}
 		}
-		if (_stub->_pi.dirMask & PlayerInput::DIR_LEFT) {
-			_stub->_pi.dirMask &= ~PlayerInput::DIR_LEFT;
+		if (_engine->_pi.dirMask & PlayerInput::DIR_LEFT) {
+			_engine->_pi.dirMask &= ~PlayerInput::DIR_LEFT;
 			switch (currentSkill) {
 			case kSkillNormal:
 				currentSkill = kSkillEasy;
@@ -295,8 +295,8 @@ bool Menu::handleLevelScreen() {
 				break;
 			}
 		}
-		if (_stub->_pi.dirMask & PlayerInput::DIR_RIGHT) {
-			_stub->_pi.dirMask &= ~PlayerInput::DIR_RIGHT;
+		if (_engine->_pi.dirMask & PlayerInput::DIR_RIGHT) {
+			_engine->_pi.dirMask &= ~PlayerInput::DIR_RIGHT;
 			switch (currentSkill) {
 			case kSkillEasy:
 				currentSkill = kSkillNormal;
@@ -306,17 +306,17 @@ bool Menu::handleLevelScreen() {
 				break;
 			}
 		}
-		if (_stub->_pi.escape) {
-			_stub->_pi.escape = false;
+		if (_engine->_pi.escape) {
+			_engine->_pi.escape = false;
 			break;
 		}
-		if (_stub->_pi.enter) {
-			_stub->_pi.enter = false;
+		if (_engine->_pi.enter) {
+			_engine->_pi.enter = false;
 			_skill = currentSkill;
 			_level = currentLevel;
 			return true;
 		}
-	} while (!_stub->_pi.quit);
+	} while (!_engine->_pi.quit);
 	return false;
 }
 
@@ -387,7 +387,7 @@ void Menu::handleTitleScreen() {
 		}
 	}
 
-	while (!quitLoop && !_stub->_pi.quit) {
+	while (!quitLoop && !_engine->_pi.quit) {
 
 		int selectedItem = -1;
 		int previousLanguage = currentLanguage;
@@ -404,16 +404,16 @@ void Menu::handleTitleScreen() {
 		}
 
 		if (g_options.enable_language_selection) {
-			if (_stub->_pi.dirMask & PlayerInput::DIR_LEFT) {
-				_stub->_pi.dirMask &= ~PlayerInput::DIR_LEFT;
+			if (_engine->_pi.dirMask & PlayerInput::DIR_LEFT) {
+				_engine->_pi.dirMask &= ~PlayerInput::DIR_LEFT;
 				if (currentLanguage != 0) {
 					--currentLanguage;
 				} else {
 					currentLanguage = ARRAYSIZE(languages) - 1;
 				}
 			}
-			if (_stub->_pi.dirMask & PlayerInput::DIR_RIGHT) {
-				_stub->_pi.dirMask &= ~PlayerInput::DIR_RIGHT;
+			if (_engine->_pi.dirMask & PlayerInput::DIR_RIGHT) {
+				_engine->_pi.dirMask &= ~PlayerInput::DIR_RIGHT;
 				if (currentLanguage != ARRAYSIZE(languages) - 1) {
 					++currentLanguage;
 				} else {
@@ -421,24 +421,24 @@ void Menu::handleTitleScreen() {
 				}
 			}
 		}
-		if (_stub->_pi.dirMask & PlayerInput::DIR_UP) {
-			_stub->_pi.dirMask &= ~PlayerInput::DIR_UP;
+		if (_engine->_pi.dirMask & PlayerInput::DIR_UP) {
+			_engine->_pi.dirMask &= ~PlayerInput::DIR_UP;
 			if (currentEntry != 0) {
 				--currentEntry;
 			} else {
 				currentEntry = menuItemsCount - 1;
 			}
 		}
-		if (_stub->_pi.dirMask & PlayerInput::DIR_DOWN) {
-			_stub->_pi.dirMask &= ~PlayerInput::DIR_DOWN;
+		if (_engine->_pi.dirMask & PlayerInput::DIR_DOWN) {
+			_engine->_pi.dirMask &= ~PlayerInput::DIR_DOWN;
 			if (currentEntry != menuItemsCount - 1) {
 				++currentEntry;
 			} else {
 				currentEntry = 0;
 			}
 		}
-		if (_stub->_pi.enter) {
-			_stub->_pi.enter = false;
+		if (_engine->_pi.enter) {
+			_engine->_pi.enter = false;
 			selectedItem = currentEntry;
 		}
 		if (selectedItem != -1) {
@@ -488,16 +488,16 @@ void Menu::handleTitleScreen() {
 
 		// draw the language flag in the top right corner
 		if (previousLanguage != currentLanguage) {
-			_stub->copyRect(0, 0, Video::GAMESCREEN_W, Video::GAMESCREEN_H, _vid->_frontLayer, Video::GAMESCREEN_W);
+			_engine->copyRect(0, 0, Video::GAMESCREEN_W, Video::GAMESCREEN_H, _vid->_frontLayer, Video::GAMESCREEN_W);
 			static const int flagW = 16;
 			static const int flagH = 12;
 			static const int flagX = Video::GAMESCREEN_W - flagW - 8;
 			static const int flagY = 8;
-			_stub->copyRectRgb24(flagX, flagY, flagW, flagH, languages[currentLanguage].bitmap16x12);
+			_engine->copyRectRgb24(flagX, flagY, flagW, flagH, languages[currentLanguage].bitmap16x12);
 		}
 		_vid->updateScreen();
-		_stub->sleep(EVENTS_DELAY);
-		_stub->processEvents();
+		_engine->sleep(EVENTS_DELAY);
+		_engine->processEvents();
 	}
 }
 

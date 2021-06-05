@@ -17,7 +17,7 @@
 
 struct File;
 struct FileSystem;
-struct SystemStub;
+struct Engine;
 
 struct Game {
 	typedef int (Game::*pge_OpcodeProc)(ObjectOpcodeArgs *args);
@@ -66,7 +66,7 @@ struct Game {
 	Resource _res;
 	SeqPlayer _seq;
 	Video _vid;
-	SystemStub *_stub;
+	Engine *_engine;
 	FileSystem *_fs;
 	const char *_savePath;
 	File _rewindBuffer[kRewindSize];
@@ -104,7 +104,7 @@ struct Game {
 	bool _autoSave;
 	uint32_t _saveTimestamp;
 
-	Game(SystemStub *, FileSystem *, FileSystem *, const char *savePath, int level, ResourceType ver, Language lang, WidescreenMode widescreenMode, bool autoSave);
+	Game(Engine *, FileSystem *, FileSystem *, const char *savePath, int level, ResourceType ver, Language lang, WidescreenMode widescreenMode, bool autoSave);
 
 	void run();
 	void displayTitleScreenAmiga();

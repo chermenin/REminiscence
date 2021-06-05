@@ -11,7 +11,7 @@
 #include "graphics.h"
 
 struct Resource;
-struct SystemStub;
+struct Engine;
 struct Video;
 
 struct Cutscene {
@@ -57,7 +57,7 @@ struct Cutscene {
 
 	Graphics _gfx;
 	Resource *_res;
-	SystemStub *_stub;
+	Engine *_engine;
 	Video *_vid;
 	const uint8_t *_patchedOffsetsTable;
 
@@ -104,7 +104,7 @@ struct Cutscene {
 	int16_t _creditsTextCounter;
 	uint8_t *_page0, *_page1, *_pageC;
 
-	Cutscene(Resource *res, SystemStub *stub, Video *vid);
+	Cutscene(Resource *res, Engine *engine, Video *vid);
 
 	const uint8_t *getCommandData() const;
 	const uint8_t *getPolygonData() const;
