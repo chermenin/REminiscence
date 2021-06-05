@@ -20,9 +20,9 @@ struct Engine_GPU : Engine {
 
 	virtual ~Engine_GPU() {}
 	virtual void initGraphics();
-	virtual void copyWidescreenLeft(int w, int h, const uint8_t *buf, bool dark = true);
-	virtual void copyWidescreenRight(int w, int h, const uint8_t *buf, bool dark = true);
-	virtual void copyWidescreenMirror(int w, int h, const uint8_t *buf);
+	virtual void copyWidescreenLeft(int w, int h, const uint8_t *buf, bool blur = false);
+	virtual void copyWidescreenRight(int w, int h, const uint8_t *buf, bool blur = false);
+	virtual void copyWidescreenMirror(int w, int h, const uint8_t *buf, bool blur = false);
 	virtual void copyWidescreenBlur(int w, int h, const uint8_t *buf);
 	virtual void clearWidescreen();
 	virtual void updateScreen(int shakeOffset);
@@ -43,18 +43,19 @@ void Engine_GPU::initGraphics() {
 	_fmt = SDL_AllocFormat(kPixelFormat);
 }
 
-void Engine_GPU::copyWidescreenLeft(int w, int h, const uint8_t *buf, bool dark) {
+void Engine_GPU::copyWidescreenLeft(int w, int h, const uint8_t *buf, bool blur) {
 	assert(w >= _wideMargin);
 	uint32_t *rgb = (uint32_t *)malloc(_wideMargin * h * sizeof(uint32_t));
 	const int offset = w - _wideMargin;
 	if (buf) {
 		for (int y = 0; y < h; ++y) {
-			
-			for (int x = offset; x < w; ++x) {
-				if (dark) {
-					rgb[y * _wideMargin + x - offset] = _darkPalette[buf[y * w + x]];
-				} else {
+			if (blur) {
+				for (int x = offset; x < w; ++x) {
 					rgb[y * _wideMargin + x - offset] = _shadowPalette[buf[y * w + x]];
+				}
+			} else {
+				for (int x = offset; x < w; ++x) {
+					rgb[y * _wideMargin + x - offset] = _darkPalette[buf[y * w + x]];
 				}
 			}
 		}
@@ -65,7 +66,7 @@ void Engine_GPU::copyWidescreenLeft(int w, int h, const uint8_t *buf, bool dark)
 		}
 	}
 
-	if (!dark) {
+	if (blur) {
 		uint32_t *tmp = (uint32_t *)malloc(_wideMargin * h * sizeof(uint32_t));
 
 		if (rgb && tmp) {
@@ -82,16 +83,18 @@ void Engine_GPU::copyWidescreenLeft(int w, int h, const uint8_t *buf, bool dark)
 	free(rgb);
 }
 
-void Engine_GPU::copyWidescreenRight(int w, int h, const uint8_t *buf, bool dark) {
+void Engine_GPU::copyWidescreenRight(int w, int h, const uint8_t *buf, bool blur) {
 	assert(w >= _wideMargin);
 	uint32_t *rgb = (uint32_t *)malloc(_wideMargin * h * sizeof(uint32_t));
 	if (buf) {
 		for (int y = 0; y < h; ++y) {
-			for (int x = 0; x < _wideMargin; ++x) {
-				if (dark) {
-					rgb[y * _wideMargin + x] = _darkPalette[buf[y * w + x]];
-				} else {
+			if (blur) {
+				for (int x = 0; x < _wideMargin; ++x) {
 					rgb[y * _wideMargin + x] = _shadowPalette[buf[y * w + x]];
+				}
+			} else {
+				for (int x = 0; x < _wideMargin; ++x) {
+					rgb[y * _wideMargin + x] = _darkPalette[buf[y * w + x]];
 				}
 			}
 		}
@@ -102,7 +105,7 @@ void Engine_GPU::copyWidescreenRight(int w, int h, const uint8_t *buf, bool dark
 		}
 	}
 
-	if (!dark) {
+	if (blur) {
 		uint32_t *tmp = (uint32_t *)malloc(_wideMargin * h * sizeof(uint32_t));
 
 		if (rgb && tmp) {
@@ -119,15 +122,34 @@ void Engine_GPU::copyWidescreenRight(int w, int h, const uint8_t *buf, bool dark
 	free(rgb);
 }
 
-void Engine_GPU::copyWidescreenMirror(int w, int h, const uint8_t *buf) {
+void Engine_GPU::copyWidescreenMirror(int w, int h, const uint8_t *buf, bool blur) {
 	assert(w >= _wideMargin);
 	int wideW = _screenW + 2 * _wideMargin;
 	uint32_t *rgb = (uint32_t *)malloc(w * h * sizeof(uint32_t));
 	uint32_t *dst = (uint32_t *)malloc(wideW * h * sizeof(uint32_t));
 	if (rgb && dst) {
-		for (int i = 0; i < w * h; ++i) {
-			rgb[i] = _darkPalette[buf[i]];
+		if (blur) {
+			for (int i = 0; i < w * h; ++i) {
+				rgb[i] = _shadowPalette[buf[i]];
+			}
+		} else {
+			for (int i = 0; i < w * h; ++i) {
+				rgb[i] = _darkPalette[buf[i]];
+			}
 		}
+
+		if (blur) {
+			uint32_t *tmp = (uint32_t *)malloc(w * h * sizeof(uint32_t));
+
+			if (rgb && tmp) {
+				static const int radius = 2;
+				blurH(radius, rgb, w, w, h, _fmt, tmp, w);
+				blurV(radius, tmp, w, w, h, _fmt, rgb, w);
+			}
+
+			free(tmp);
+		}
+
 		uint32_t *p = dst;
 		for (int y = 0; y < h; ++y) {
 			for (int x = 0; x < _wideMargin; ++x) {
@@ -173,7 +195,13 @@ void Engine_GPU::copyWidescreenBlur(int w, int h, const uint8_t *buf) {
 }
 
 void Engine_GPU::clearWidescreen() {
-	// @todo: clear widescreen image?
+	uint32_t *buf = (uint32_t *)malloc(_widescreenImage->w * _widescreenImage->h * sizeof(uint32_t));
+	const uint32_t color = SDL_MapRGB(_fmt, 0, 0, 0);
+	for (int i = 0; i < _widescreenImage->w * _widescreenImage->h; ++i) {
+		buf[i] = color;
+	}
+	GPU_UpdateImageBytes(_widescreenImage, 0, (unsigned char *)buf, _widescreenImage->w * sizeof(uint32_t));
+	free(buf);
 }
 
 void Engine_GPU::updateScreen(int shakeOffset) {
@@ -189,7 +217,6 @@ void Engine_GPU::updateScreen(int shakeOffset) {
 	if (_widescreenMode != kWidescreenNone) {
 		if (_enableWidescreen) {
 			// borders / background screen
-			int h = (_widescreenMode == kWidescreenBlur) ? _screen->h * _screen->w / _texW : _texH;
 			GPU_Rect r = GPU_MakeRect(0, 0, _screen->w, _screen->h);
 			GPU_BlitRect(_widescreenImage, NULL, _screen, &r);
 		}

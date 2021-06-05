@@ -159,7 +159,7 @@ bool OggPlayer::playTrack(int num) {
 		vf->offset = 0;
 		_impl = new OggDecoder_impl();
 		if (_impl->load(vf, _mix->getSampleRate())) {
-			debug(DBG_INFO, "Playing '%s'", buf);
+			debug(DBG_OGG, "Playing '%s'", buf);
 			_mix->setPremixHook(mixCallback, this);
 			return true;
 		}

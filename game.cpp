@@ -1593,7 +1593,7 @@ void Game::loadLevelMap() {
 				!(_currentLevel == 1 && (leftRoom == 0 || leftRoom == 13 || leftRoom == 38 || leftRoom == 51))
 			) {
 				_vid.PC_decodeMap(_currentLevel, leftRoom);
-				_engine->copyWidescreenLeft(Video::GAMESCREEN_W, Video::GAMESCREEN_H, _vid._backLayer, _widescreenMode == kWidescreenAdjacentRooms);
+				_engine->copyWidescreenLeft(Video::GAMESCREEN_W, Video::GAMESCREEN_H, _vid._backLayer, _widescreenMode == kWidescreenAdjacentRoomsBlur);
 			} else {
 				_engine->copyWidescreenLeft(Video::GAMESCREEN_W, Video::GAMESCREEN_H, 0);
 			}
@@ -1604,7 +1604,7 @@ void Game::loadLevelMap() {
 				!(_currentLevel == 1 && (rightRoom == 0 || rightRoom == 13 || rightRoom == 38 || rightRoom == 51))
 			) {
 				_vid.PC_decodeMap(_currentLevel, rightRoom);
-				_engine->copyWidescreenRight(Video::GAMESCREEN_W, Video::GAMESCREEN_H, _vid._backLayer, _widescreenMode == kWidescreenAdjacentRooms);
+				_engine->copyWidescreenRight(Video::GAMESCREEN_W, Video::GAMESCREEN_H, _vid._backLayer, _widescreenMode == kWidescreenAdjacentRoomsBlur);
 			} else {
 				_engine->copyWidescreenRight(Video::GAMESCREEN_W, Video::GAMESCREEN_H, 0);
 			}
@@ -1621,7 +1621,7 @@ void Game::loadLevelMap() {
 				!(_currentLevel == 1 && (leftRoom == 0 || leftRoom == 13 || leftRoom == 38 || leftRoom == 51))
 			) {
 				_vid.MAC_decodeMap(_currentLevel, leftRoom);
-				_engine->copyWidescreenLeft(_vid._w, _vid._h, _vid._backLayer, _widescreenMode == kWidescreenAdjacentRooms);
+				_engine->copyWidescreenLeft(_vid._w, _vid._h, _vid._backLayer, _widescreenMode == kWidescreenAdjacentRoomsBlur);
 			} else {
 				_engine->copyWidescreenLeft(_vid._w, _vid._h, 0);
 			}
@@ -1632,7 +1632,7 @@ void Game::loadLevelMap() {
 				!(_currentLevel == 1 && (leftRoom == 0 || leftRoom == 13 || leftRoom == 38 || leftRoom == 51))
 			) {
 				_vid.MAC_decodeMap(_currentLevel, rightRoom);
-				_engine->copyWidescreenRight(_vid._w, _vid._h, _vid._backLayer, _widescreenMode == kWidescreenAdjacentRooms);
+				_engine->copyWidescreenRight(_vid._w, _vid._h, _vid._backLayer, _widescreenMode == kWidescreenAdjacentRoomsBlur);
 			} else {
 				_engine->copyWidescreenRight(_vid._w, _vid._h, 0);
 			}

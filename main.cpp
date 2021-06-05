@@ -177,6 +177,7 @@ static WidescreenMode parseWidescreen(const char *mode) {
 		{ "adjacent", kWidescreenAdjacentRooms },
 		{ "adjacent-blur", kWidescreenAdjacentRoomsBlur },
 		{ "mirror", kWidescreenMirrorRoom },
+		{ "mirror-blur", kWidescreenMirrorRoomBlur },
 		{ "blur", kWidescreenBlur },
 		{ 0, kWidescreenNone },
 	};
@@ -285,7 +286,7 @@ int main(int argc, char *argv[]) {
 	if (useWrikeTShirt) {
 		g_options.use_wrike_tshirt = true;
 	}
-	g_debugMask = DBG_INFO; // | DBG_MOD | DBG_SFX | DBG_SND | DBG_FILE | DBG_CUT | DBG_VIDEO | DBG_RES | DBG_MENU | DBG_PGE | DBG_GAME | DBG_UNPACK | DBG_COL;
+	g_debugMask = DBG_INFO; // | DBG_MOD | DBG_SFX | DBG_SND | DBG_OGG | DBG_FILE | DBG_CUT | DBG_VIDEO | DBG_RES | DBG_MENU | DBG_PGE | DBG_GAME | DBG_UNPACK | DBG_COL;
 	FileSystem fs(dataPath);
 	FileSystem tune_fs(tunePath);
 	const int version = detectVersion(&fs);

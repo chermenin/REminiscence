@@ -118,9 +118,9 @@ struct Engine {
 	void blurV(int radius, const uint32_t *src, int srcPitch, int w, int h, const SDL_PixelFormat *fmt, uint32_t *dst, int dstPitch);
 
 	virtual void initGraphics() = 0;
-	virtual void copyWidescreenLeft(int w, int h, const uint8_t *buf, bool dark = true) = 0;
-	virtual void copyWidescreenRight(int w, int h, const uint8_t *buf, bool dark = true) = 0;
-	virtual void copyWidescreenMirror(int w, int h, const uint8_t *buf) = 0;
+	virtual void copyWidescreenLeft(int w, int h, const uint8_t *buf, bool blur = false) = 0;
+	virtual void copyWidescreenRight(int w, int h, const uint8_t *buf, bool blur = false) = 0;
+	virtual void copyWidescreenMirror(int w, int h, const uint8_t *buf, bool blur = false) = 0;
 	virtual void copyWidescreenBlur(int w, int h, const uint8_t *buf) = 0;
 	virtual void clearWidescreen() = 0;
 	virtual void updateScreen(int shakeOffset) = 0;

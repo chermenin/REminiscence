@@ -19,9 +19,9 @@ struct Engine_SDL : Engine {
 
 	virtual ~Engine_SDL() {}
 	virtual void initGraphics();
-	virtual void copyWidescreenLeft(int w, int h, const uint8_t *buf, bool dark = true);
-	virtual void copyWidescreenRight(int w, int h, const uint8_t *buf, bool dark = true);
-	virtual void copyWidescreenMirror(int w, int h, const uint8_t *buf);
+	virtual void copyWidescreenLeft(int w, int h, const uint8_t *buf, bool blur = false);
+	virtual void copyWidescreenRight(int w, int h, const uint8_t *buf, bool blur = false);
+	virtual void copyWidescreenMirror(int w, int h, const uint8_t *buf, bool blur = false);
 	virtual void copyWidescreenBlur(int w, int h, const uint8_t *buf);
 	virtual void clearWidescreen();
 	virtual void updateScreen(int shakeOffset);
@@ -55,16 +55,18 @@ static void clearTexture(SDL_Texture *texture, int h, SDL_PixelFormat *fmt) {
 	}
 }
 
-void Engine_SDL::copyWidescreenLeft(int w, int h, const uint8_t *buf, bool dark) {
+void Engine_SDL::copyWidescreenLeft(int w, int h, const uint8_t *buf, bool blur) {
 	assert(w >= _wideMargin);
 	uint32_t *rgb = (uint32_t *)malloc(w * h * sizeof(uint32_t));
 	if (rgb) {
 		if (buf) {
-			for (int i = 0; i < w * h; ++i) {
-				if (dark) {
-					rgb[i] = _darkPalette[buf[i]];
-				} else {
+			if (blur) {
+				for (int i = 0; i < w * h; ++i) {
 					rgb[i] = _shadowPalette[buf[i]];
+				}
+			} else {
+				for (int i = 0; i < w * h; ++i) {
+					rgb[i] = _darkPalette[buf[i]];
 				}
 			}
 		} else {
@@ -74,7 +76,7 @@ void Engine_SDL::copyWidescreenLeft(int w, int h, const uint8_t *buf, bool dark)
 			}
 		}
 
-		if (!dark) {
+		if (blur) {
 			uint32_t *tmp = (uint32_t *)malloc(w * h * sizeof(uint32_t));
 
 			if (rgb && tmp) {
@@ -97,16 +99,18 @@ void Engine_SDL::copyWidescreenLeft(int w, int h, const uint8_t *buf, bool dark)
 	}
 }
 
-void Engine_SDL::copyWidescreenRight(int w, int h, const uint8_t *buf, bool dark) {
+void Engine_SDL::copyWidescreenRight(int w, int h, const uint8_t *buf, bool blur) {
 	assert(w >= _wideMargin);
 	uint32_t *rgb = (uint32_t *)malloc(w * h * sizeof(uint32_t));
 	if (rgb) {
 		if (buf) {
-			for (int i = 0; i < w * h; ++i) {
-				if (dark) {
-					rgb[i] = _darkPalette[buf[i]];
-				} else {
+			if (blur) {
+				for (int i = 0; i < w * h; ++i) {
 					rgb[i] = _shadowPalette[buf[i]];
+				}
+			} else {
+				for (int i = 0; i < w * h; ++i) {
+					rgb[i] = _darkPalette[buf[i]];
 				}
 			}
 		} else {
@@ -116,7 +120,7 @@ void Engine_SDL::copyWidescreenRight(int w, int h, const uint8_t *buf, bool dark
 			}
 		}
 
-		if (!dark) {
+		if (blur) {
 			uint32_t *tmp = (uint32_t *)malloc(w * h * sizeof(uint32_t));
 
 			if (rgb && tmp) {
@@ -139,13 +143,32 @@ void Engine_SDL::copyWidescreenRight(int w, int h, const uint8_t *buf, bool dark
 	}
 }
 
-void Engine_SDL::copyWidescreenMirror(int w, int h, const uint8_t *buf) {
+void Engine_SDL::copyWidescreenMirror(int w, int h, const uint8_t *buf, bool blur) {
 	assert(w >= _wideMargin);
 	uint32_t *rgb = (uint32_t *)malloc(w * h * sizeof(uint32_t));
 	if (rgb) {
-		for (int i = 0; i < w * h; ++i) {
-			rgb[i] = _darkPalette[buf[i]];
+		if (blur) {
+			for (int i = 0; i < w * h; ++i) {
+				rgb[i] = _shadowPalette[buf[i]];
+			}
+		} else {
+			for (int i = 0; i < w * h; ++i) {
+				rgb[i] = _darkPalette[buf[i]];
+			}
 		}
+
+		if (blur) {
+			uint32_t *tmp = (uint32_t *)malloc(w * h * sizeof(uint32_t));
+
+			if (rgb && tmp) {
+				static const int radius = 2;
+				blurH(radius, rgb, w, w, h, _fmt, tmp, w);
+				blurV(radius, tmp, w, w, h, _fmt, rgb, w);
+			}
+
+			free(tmp);
+		}
+
 		void *dst = 0;
 		int pitch = 0;
 		if (SDL_LockTexture(_widescreenTexture, 0, &dst, &pitch) == 0) {

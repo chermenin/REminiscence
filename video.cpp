@@ -117,8 +117,8 @@ void Video::updateScreen() {
 
 void Video::updateWidescreen() {
 	if (_engine->hasWidescreen()) {
-		if (_widescreenMode == kWidescreenMirrorRoom) {
-			_engine->copyWidescreenMirror(_w, _h, _backLayer);
+		if (_widescreenMode == kWidescreenMirrorRoom || _widescreenMode == kWidescreenMirrorRoomBlur) {
+			_engine->copyWidescreenMirror(_w, _h, _backLayer, _widescreenMode == kWidescreenMirrorRoomBlur);
 		} else if (_widescreenMode == kWidescreenBlur) {
 			_engine->copyWidescreenBlur(_w, _h, _backLayer);
 		} else {
@@ -154,6 +154,7 @@ void Video::fadeOutPalette() {
 		}
 		fullRefresh();
 		updateScreen();
+		updateWidescreen();
 		_engine->sleep(50);
 	}
 }
