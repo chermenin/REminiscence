@@ -1450,7 +1450,7 @@ uint8_t *Resource::decodeResourceMacData(const char *name, bool decompressLzss) 
 			}
 		}
 	} else {
-		error("Resource '%s' not found", name);
+		debug(DBG_RES, "Resource '%s' not found", name);
 	}
 	return data;
 }
