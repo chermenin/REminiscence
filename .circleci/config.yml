@@ -28,10 +28,10 @@ jobs:
     steps:
       - checkout
       - run: apt update && apt install libmodplug-dev autoconf libtool libogg-dev libz-mingw-w64-dev -y
-      - run: apt update && apt search iconv-mingw
+      - run: apt update && apt search iconv
       - run: git clone https://github.com/soundcloud/tremor.git
       - run: cd tremor && ./autogen.sh && make && make install
-      - run: export PREFIX=/usr/x86_64-w64-mingw32 && make -f windows.mk
+      - run: make -f windows.mk
       - run: ls -la
       - store_artifacts:
           path: fb.exe
