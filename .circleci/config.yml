@@ -30,8 +30,7 @@ jobs:
       - run: apt update && apt install libmodplug-dev autoconf libtool libogg-dev -y
       - run: git clone https://github.com/soundcloud/tremor.git
       - run: cd tremor && ./autogen.sh && make && make install
-      - run: rm -f /usr/bin/g++ & ln /usr/bin/x86_64-w64-mingw32-g++-win32 /usr/bin/g++
-      - run: make
+      - run: make -f windows.mk
       - run: ls -la
       - store_artifacts:
           path: fb.exe
