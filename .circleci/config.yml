@@ -4,7 +4,7 @@ workflows:
   version: 2
   dist-compile:
     jobs:
-      - make-linux
+      # - make-linux
       - make-windows
 
 jobs:
@@ -27,7 +27,7 @@ jobs:
       - image: didstopia/sdl2
     steps:
       - checkout
-      - run: apt update && apt upgrade -y
+      - run: apt update
       - run: apt install libmodplug-dev autoconf libtool libogg-dev -y
       - run: apt search mingw
       - run: git clone https://github.com/soundcloud/tremor.git
