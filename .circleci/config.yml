@@ -13,6 +13,7 @@ jobs:
       - image: didstopia/sdl2
     steps:
       - checkout
+      - run: apt install libmodplug-dev
       - run: make
       - run: ls -la
       - store_artifacts:
