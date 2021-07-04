@@ -31,7 +31,7 @@ jobs:
       - run: apt update && apt search iconv-mingw
       - run: git clone https://github.com/soundcloud/tremor.git
       - run: cd tremor && ./autogen.sh && make && make install
-      - run: export PKG_CONFIG_PATH=/usr/x86_64-w64-mingw32/lib/pkgconfig && make -f windows.mk
+      - run: export PREFIX=/usr/x86_64-w64-mingw32 && make -f windows.mk
       - run: ls -la
       - store_artifacts:
           path: fb.exe
