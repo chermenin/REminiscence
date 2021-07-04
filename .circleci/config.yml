@@ -27,7 +27,7 @@ jobs:
       - image: didstopia/sdl2
     steps:
       - checkout
-      - run: apt update && apt install libmodplug-dev autoconf libtool libogg-dev libz-mingw-w64-dev -y
+      - run: apt update && apt install libmodplug-dev autoconf libtool libogg-dev libz-mingw-w64-dev win-iconv-mingw-w64-dev -y
       - run: git clone https://github.com/soundcloud/tremor.git
       - run: cd tremor && ./autogen.sh && make && make install
       - run: export PKG_CONFIG_PATH=/usr/x86_64-w64-mingw32/lib/pkgconfig && make -f windows.mk
