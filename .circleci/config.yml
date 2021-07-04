@@ -13,7 +13,7 @@ jobs:
       - image: didstopia/sdl2
     steps:
       - checkout
-      - run: apt install libmodplug-dev -y
+      - run: apt update && apt install libmodplug-dev autoconf -y
       - run: git clone https://github.com/soundcloud/tremor.git
       - run: cd tremor && ./autogen.sh && make && make install
       - run: make
