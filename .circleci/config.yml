@@ -28,7 +28,7 @@ jobs:
     steps:
       - checkout
       - run: apt update
-      - run: DEBIAN_FRONTEND="noninteractive" apt install libsdl2-dev libmodplug-dev autoconf libtool libogg-dev libz-mingw-w64-dev -y
+      - run: DEBIAN_FRONTEND="noninteractive" apt install git libsdl2-dev libmodplug-dev autoconf libtool libogg-dev libz-mingw-w64-dev -y
       - run: apt search mingw
       - run: git clone https://github.com/soundcloud/tremor.git
       - run: cd tremor && ./autogen.sh && make && make install
