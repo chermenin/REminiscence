@@ -1,12 +1,12 @@
 
-SDL_CFLAGS   := `sdl2-config --cflags`
+SDL_CFLAGS   := -I/usr/include/SDL2
 SDL_LIBS     := `sdl2-config --libs`
 
 MODPLUG_LIBS := -lmodplug
 TREMOR_LIBS  := -lvorbisidec -logg
 ZLIB_LIBS    := -lz
 
-CXX=x86_64-w64-mingw32-g++-win32
+CXX=x86_64-w64-mingw32-gcc-win32
 CXXFLAGS += -std=c++17 -Wall -Wpedantic -Woverlength-strings -MMD $(SDL_CFLAGS) -DUSE_MODPLUG -DUSE_TREMOR -DUSE_ZLIB
 
 SRCS = collision.cpp cpc_player.cpp cutscene.cpp decode_mac.cpp file.cpp fs.cpp game.cpp graphics.cpp main.cpp \
