@@ -28,12 +28,12 @@ jobs:
     steps:
       - checkout
       - run: apt update
-      - run: DEBIAN_FRONTEND="noninteractive" apt install -y git gcc g++ gcc-multilib g++-multilib build-essential xutils-dev libsdl2-dev libsdl2-gfx-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-net-dev libsdl2-ttf-dev libreadline6-dev libncurses5-dev mingw-w64 cmake wget unzip
+      - run: DEBIAN_FRONTEND="noninteractive" apt install -y git gcc g++ gcc-multilib g++-multilib build-essential xutils-dev libsdl2-dev libsdl2-gfx-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-net-dev libsdl2-ttf-dev libreadline6-dev libncurses5-dev mingw-w64 cmake wget
       - run: apt install -y libmodplug-dev autoconf libtool libogg-dev libz-mingw-w64-dev win-iconv-mingw-w64-dev
       - run: git clone https://github.com/soundcloud/tremor.git
       - run: cd tremor && ./autogen.sh && make && make install
       - run: wget http://libsdl.org/release/SDL2-devel-2.0.14-mingw.tar.gz
-      - run: unzip SDL2-devel-2.0.14-mingw.tar.gz
+      - run: tar -xzvf SDL2-devel-2.0.14-mingw.tar.gz
       - run: ls -la
       - run: make -f windows.mk
       - run: ls -la
