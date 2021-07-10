@@ -1,6 +1,6 @@
 
-SDL_CFLAGS   := -ISDL2-2.0.14/x86_64-w64-mingw32/bin/
-SDL_LIBS     := `SDL2-2.0.14/x86_64-w64-mingw32/bin/sdl2-config --libs`
+SDL_CFLAGS   := `sdl2-config --cflags`
+SDL_LIBS     := `sdl2-config --libs`
 
 MODPLUG_LIBS := -lmodplug
 TREMOR_LIBS  := -lvorbisidec -logg
