@@ -33,7 +33,7 @@ jobs:
       - run: apt search sdl
       - run: git clone https://github.com/soundcloud/tremor.git
       - run: cd tremor && ./autogen.sh && make && make install
-      - run: ls /usr/include/SDL2/
+      - run: ls /usr/include/
       - run: make -f windows.mk
       - run: ls -la
       - store_artifacts:
