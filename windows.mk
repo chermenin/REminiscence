@@ -22,7 +22,7 @@ DEPS = $(SRCS:.cpp=.d) $(SCALERS:.cpp=.d)
 LIBS = $(SDL_LIBS) # $(MODPLUG_LIBS) $(TREMOR_LIBS) $(ZLIB_LIBS)
 
 fb: $(OBJS)
-	$(CXX) $(LDFLAGS) -LSDL2-2.0.14/x86_64-w64-mingw32/libs -o $@ $(OBJS) -Wl,-Bdynamic $(LIBS)
+	$(CXX) $(LDFLAGS) -LSDL2-2.0.14/x86_64-w64-mingw32/lib/ -o $@ $(OBJS) -Wl,-Bdynamic $(LIBS)
 
 clean:
 	rm -f $(OBJS) $(DEPS)
