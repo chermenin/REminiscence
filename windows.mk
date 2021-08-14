@@ -19,10 +19,10 @@ OBJS = $(SRCS:.cpp=.o) $(SCALERS:.cpp=.o)
 DEPS = $(SRCS:.cpp=.d) $(SCALERS:.cpp=.d)
 
 # LIBS = $(SDL_LIBS) -Wl,-Bstatic $(MODPLUG_LIBS) $(TREMOR_LIBS) $(ZLIB_LIBS) -Wl,-Bdynamic
-LIBS = $(SDL_LIBS) $(MODPLUG_LIBS) $(TREMOR_LIBS) $(ZLIB_LIBS)
+LIBS = $(SDL_LIBS) # $(MODPLUG_LIBS) $(TREMOR_LIBS) $(ZLIB_LIBS)
 
 fb: $(OBJS)
-	$(CXX) $(LDFLAGS) -o $@ $(OBJS) $(LIBS)
+	$(CXX) $(LDFLAGS) -o $@ $(OBJS) -Wl,-Bdynamic $(LIBS)
 
 clean:
 	rm -f $(OBJS) $(DEPS)
