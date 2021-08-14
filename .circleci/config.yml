@@ -18,7 +18,6 @@ jobs:
       - run: git clone https://github.com/soundcloud/tremor.git
       - run: cd tremor && ./autogen.sh && make && make install
       - run: make
-      - run: ls -la
       - store_artifacts:
           path: fb
 
@@ -34,8 +33,6 @@ jobs:
       - run: cd tremor && ./autogen.sh && make && make install
       - run: wget http://libsdl.org/release/SDL2-devel-2.0.14-mingw.tar.gz
       - run: tar -xzvf SDL2-devel-2.0.14-mingw.tar.gz
-      - run: ls -la
       - run: make -f windows.mk
-      - run: ls -la
       - store_artifacts:
           path: fb.exe
