@@ -114,6 +114,10 @@ void Game::pge_loadForCurrentLevel(uint16_t idx) {
 
 void Game::pge_process(LivePGE *pge) {
 	debug(DBG_PGE, "Game::pge_process() pge_num=%ld", pge - &_pgeLive[0]);
+	if (pge->index == 75 || pge->index == 76 || pge->index == 77 || pge->index == 78) {
+		debug(DBG_PGE, "[NATIVE] process_in pge%u type=%u anim=%u life=%d flags=0x%X pos=(%d,%d) room=%u",
+			pge->index, pge->obj_type, pge->anim_seq, pge->life, pge->flags, pge->pos_x, pge->pos_y, pge->room_location);
+	}
 	_pge_playAnimSound = true;
 	_pge_currentPiegeFacingDir = (pge->flags & 1) != 0;
 	_pge_currentPiegeRoom = pge->room_location;
@@ -314,6 +318,10 @@ int Game::pge_execute(LivePGE *live_pge, InitPGE *init_pge, const Object *obj) {
 		live_pge->flags ^= 1;
 	}
 	if (obj->flags & 2) {
+		if (live_pge->index == 75 || live_pge->index == 76 || live_pge->index == 77 || live_pge->index == 78) {
+			debug(DBG_PGE, "[NATIVE] life_decr pge%u type=%u -> life %d->%d flags=%d obj_flags=0x%X src=%u->dst=%u",
+				live_pge->index, live_pge->obj_type, live_pge->life, live_pge->life - 1, live_pge->flags, obj->flags, obj->type, obj->init_obj_type);
+		}
 		--live_pge->life;
 		if (init_pge->object_type == 1) {
 			_pge_processOBJ = true;
@@ -2150,6 +2158,10 @@ int Game::pge_ZOrder(LivePGE *pge, int16_t num, pge_ZOrderCallback compare, uint
 
 void Game::pge_sendMessage(uint8_t src_pge_index, uint8_t dst_pge_index, int16_t num) {
 	debug(DBG_GAME, "Game::pge_sendMessage() src=0x%X dst=0x%X num=0x%X", src_pge_index, dst_pge_index, num);
+	if (src_pge_index == 75 || src_pge_index == 76 || src_pge_index == 77 || src_pge_index == 78 ||
+	    dst_pge_index == 75 || dst_pge_index == 76 || dst_pge_index == 77 || dst_pge_index == 78) {
+		debug(DBG_GAME, "[NATIVE] sendMessage src=%u dst=%u num=%d", src_pge_index, dst_pge_index, num);
+	}
 	LivePGE *pge = &_pgeLive[dst_pge_index];
 	if (!(pge->flags & 4)) {
 		if (!(pge->init_PGE->flags & 1)) {
